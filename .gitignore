@@ -21,6 +21,18 @@
 *.tar.gz
 *.rar
 .idea/
+
+# GCP Service Account Keys
+*-key.json
+github-actions-key.json
+*.json.key
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Docker
+.dockerignore
 .vscode/
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

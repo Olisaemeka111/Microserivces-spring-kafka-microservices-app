@@ -96,11 +96,19 @@
                     <from>
                         <image>eclipse-temurin:17.0.4.1_1-jre</image>
                     </from>
-                    <!-- Please change to your username in case you want to save in docker registry -->
                     <to>
-                        <image>spring-kafka-ms/${project.artifactId}</image>
-                        <!--image>registry.hub.docker.com/</user-name>/${artifactId}</image-->
+                        <image>gcr.io/${project.artifactId}</image>
                     </to>
+                    <container>
+                        <jvmFlags>
+                            <jvmFlag>-Xms512m</jvmFlag>
+                            <jvmFlag>-Xmx1024m</jvmFlag>
+                        </jvmFlags>
+                        <ports>
+                            <port>8080</port>
+                        </ports>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                    </container>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,0 +1,91 @@
+steps:
+# Maven build step for all services
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['clean', 'package', '-DskipTests']
+  dir: '.'
+
+# Build and push images for each microservice
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['jib:build', '-Djib.to.image=gcr.io/$PROJECT_ID/product-service:$COMMIT_SHA']
+  dir: 'product-service'
+
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['jib:build', '-Djib.to.image=gcr.io/$PROJECT_ID/order-service:$COMMIT_SHA']
+  dir: 'order-service'
+
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['jib:build', '-Djib.to.image=gcr.io/$PROJECT_ID/inventory-service:$COMMIT_SHA']
+  dir: 'inventory-service'
+
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['jib:build', '-Djib.to.image=gcr.io/$PROJECT_ID/notification-service:$COMMIT_SHA']
+  dir: 'notification-service'
+
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['jib:build', '-Djib.to.image=gcr.io/$PROJECT_ID/discovery-server:$COMMIT_SHA']
+  dir: 'discovery-server'
+
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['jib:build', '-Djib.to.image=gcr.io/$PROJECT_ID/api-gateway:$COMMIT_SHA']
+  dir: 'api-gateway'
+
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['jib:build', '-Djib.to.image=gcr.io/$PROJECT_ID/admin-server:$COMMIT_SHA']
+  dir: 'admin-server'
+
+# Create namespace if it doesn't exist
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'apply'
+  - '-f'
+  - 'k8s/namespace.yaml'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${_ZONE}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
+
+# Update image tags in deployment files
+- name: 'gcr.io/cloud-builders/sed'
+  args:
+  - '-i'
+  - 's|${PROJECT_ID}|$PROJECT_ID|g'
+  - 'k8s/*.yaml'
+
+- name: 'gcr.io/cloud-builders/sed'
+  args:
+  - '-i'
+  - 's|${COMMIT_SHA}|$COMMIT_SHA|g'
+  - 'k8s/*.yaml'
+
+# Deploy to GKE
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'apply'
+  - '-f'
+  - 'k8s/'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${_ZONE}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
+
+# Wait for deployments to be ready
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'wait'
+  - '--for=condition=available'
+  - '--timeout=300s'
+  - 'deployment/api-gateway'
+  - '-n'
+  - 'microservices-app'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${_ZONE}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
+
+images:
+- 'gcr.io/$PROJECT_ID/product-service:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/order-service:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/inventory-service:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/notification-service:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/discovery-server:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/api-gateway:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/admin-server:$COMMIT_SHA'
+
+timeout: 1800s 
