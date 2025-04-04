@@ -3,8 +3,10 @@ kind: Deployment
 metadata:
   name: api-gateway
   namespace: microservices-app
+  labels:
+    app: api-gateway
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: api-gateway
@@ -12,17 +14,59 @@ spec:
     metadata:
       labels:
         app: api-gateway
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
     spec:
       containers:
       - name: api-gateway
-        image: gcr.io/${PROJECT_ID}/api-gateway:${COMMIT_SHA}
+        image: us-central1-docker.pkg.dev/${PROJECT_ID}/spring-kafka-microservices/api-gateway:${COMMIT_SHA}
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 30
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
         - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
           value: "http://discovery-server:8761/eureka"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[0]_ID
+          value: "product-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[0]_URI
+          value: "lb://product-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[0]_PREDICATES[0]
+          value: "Path=/api/products/**"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[1]_ID
+          value: "order-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[1]_URI
+          value: "lb://order-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[1]_PREDICATES[0]
+          value: "Path=/api/orders/**"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[2]_ID
+          value: "inventory-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[2]_URI
+          value: "lb://inventory-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[2]_PREDICATES[0]
+          value: "Path=/api/inventory/**"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[3]_ID
+          value: "notification-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[3]_URI
+          value: "lb://notification-service"
+        - name: SPRING_CLOUD_GATEWAY_ROUTES[3]_PREDICATES[0]
+          value: "Path=/api/notifications/**"
         resources:
           requests:
             memory: "512Mi"
@@ -36,10 +80,64 @@ kind: Service
 metadata:
   name: api-gateway
   namespace: microservices-app
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "api-gateway-backendconfig"}'
+  labels:
+    app: api-gateway
 spec:
   selector:
     app: api-gateway
   ports:
-  - port: 8080
+  - port: 80
     targetPort: 8080
-  type: LoadBalancer 
+    name: http
+  type: LoadBalancer
+  sessionAffinity: ClientIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: microservices-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: api-gateway-backendconfig
+  namespace: microservices-app
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /actuator/health
+    port: 8080
+  sessionAffinity:
+    affinityType: "CLIENT_IP"
+    affinityCookieTtlSec: 1800
+  timeoutSec: 30
+  connectionDraining:
+    drainingTimeoutSec: 60

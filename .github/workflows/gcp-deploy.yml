@@ -15,6 +15,7 @@ env:
   PRODUCT_SERVICE_IMAGE: product-service
   INVENTORY_SERVICE_IMAGE: inventory-service
   NOTIFICATION_SERVICE_IMAGE: notification-service
+  API_GATEWAY_IMAGE: api-gateway
 
 jobs:
   setup-build-publish-deploy:
@@ -99,6 +100,11 @@ jobs:
         docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }} ./notification-service
         docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}
 
+    - name: Build and Push API Gateway
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }} ./api-gateway
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }}
+
     # Update the Kubernetes manifests with the new image tags
     - name: Update Kubernetes manifests
       run: |
@@ -106,6 +112,7 @@ jobs:
         sed -i "s|image: .*product-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
         sed -i "s|image: .*inventory-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
         sed -i "s|image: .*notification-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*api-gateway.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }}|g" k8s/api-gateway.yaml
 
     # Deploy the application to GKE
     - name: Deploy to GKE
@@ -113,4 +120,24 @@ jobs:
         kubectl apply -f k8s/namespace.yaml
         kubectl apply -f k8s/infrastructure.yaml
         kubectl apply -f k8s/services.yaml
+        kubectl apply -f k8s/api-gateway.yaml
         kubectl get services -n microservices-app
+        
+    # Get the API Gateway external IP
+    - name: Get API Gateway External IP
+      run: |
+        echo "Waiting for API Gateway external IP to be assigned..."
+        for i in {1..10}; do
+          EXTERNAL_IP=$(kubectl get service api-gateway -n microservices-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [ -n "$EXTERNAL_IP" ]; then
+            echo "API Gateway is accessible at: http://$EXTERNAL_IP"
+            break
+          fi
+          echo "Waiting for external IP... (attempt $i/10)"
+          sleep 30
+        done
+        
+        if [ -z "$EXTERNAL_IP" ]; then
+          echo "Couldn't get external IP after waiting. You can check it later with:"
+          echo "kubectl get service api-gateway -n microservices-app"
+        fi
