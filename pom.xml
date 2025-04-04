@@ -25,10 +25,10 @@
     </modules>
 
     <properties>
-        <java.version>22</java.version>
+        <java.version>17</java.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
-        <maven.compiler.source>22</maven.compiler.source>
-        <maven.compiler.target>22</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <spring-cloud.version>2023.0.2</spring-cloud.version>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <org.lombok.version>1.18.30</org.lombok.version>
