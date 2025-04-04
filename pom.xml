@@ -81,10 +81,7 @@
                     </annotationProcessorPaths>
 
                     <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
+                        <exclude>org.projectlombok:lombok</exclude>
                     </excludes>
                 </configuration>
             </plugin>
