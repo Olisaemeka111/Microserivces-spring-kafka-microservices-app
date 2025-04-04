@@ -10,6 +10,17 @@ This Terraform configuration creates a GKE Autopilot cluster optimized for micro
 - Workload Identity enabled for enhanced security
 - Vertical Pod Autoscaling for optimized resource usage
 
+## File Structure
+
+The Terraform configuration is organized into the following files:
+
+- `main.tf` - Contains the main infrastructure resources (VPC, GKE cluster, etc.)
+- `variables.tf` - Defines the input variables for the configuration
+- `outputs.tf` - Defines the output values from the infrastructure deployment
+- `provider.tf` - Contains provider configuration settings
+- `versions.tf` - Specifies Terraform and provider version requirements
+- `terraform.tfvars` - Contains the actual values for the variables
+
 ## Prerequisites
 
 1. [Terraform](https://www.terraform.io/downloads.html) (version 1.0.0+)

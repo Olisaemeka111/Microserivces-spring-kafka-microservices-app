@@ -1,25 +1,3 @@
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
-
-variable "project_id" {
-  description = "The GCP project ID"
-  type        = string
-}
-
-variable "region" {
-  description = "The GCP region for the cluster"
-  default     = "us-central1"
-  type        = string
-}
-
-variable "cluster_name" {
-  description = "The name of the GKE cluster"
-  default     = "microservices-autopilot"
-  type        = string
-}
-
 # VPC Network for the GKE cluster
 resource "google_compute_network" "vpc" {
   name                    = "${var.cluster_name}-vpc"
@@ -113,21 +91,4 @@ resource "google_compute_router_nat" "nat" {
   region                             = var.region
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-}
-
-# Outputs
-output "cluster_name" {
-  value = google_container_cluster.primary.name
-}
-
-output "cluster_endpoint" {
-  value = google_container_cluster.primary.endpoint
-}
-
-output "region" {
-  value = var.region
-}
-
-output "get_credentials_command" {
-  value = "gcloud container clusters get-credentials ${google_container_cluster.primary.name} --region ${var.region} --project ${var.project_id}"
 } 
