@@ -1,0 +1,33 @@
+# Redeploy with Public Images
+# This script will redeploy the discovery-server and api-gateway using public images
+
+# 1. Delete the problematic deployments
+kubectl delete deployment discovery-server api-gateway -n microservices-app
+
+# 2. Wait for pods to be terminated
+echo "Waiting for pods to terminate..."
+sleep 30
+
+# 3. Apply the updated discovery-server with public image
+kubectl apply -f k8s/discovery-server.yaml
+echo "Waiting for discovery-server to start..."
+sleep 60
+kubectl get pods -n microservices-app -l app=discovery-server
+
+# 4. Apply the updated api-gateway with public image
+kubectl apply -f k8s/api-gateway.yaml
+echo "Waiting for api-gateway to start..."
+sleep 60
+kubectl get pods -n microservices-app -l app=api-gateway
+
+# 5. Check the status of all pods
+echo "Checking status of all pods..."
+kubectl get pods -n microservices-app
+
+# 6. Check the logs of the discovery-server
+echo "Discovery Server logs:"
+kubectl logs -n microservices-app -l app=discovery-server --tail=50
+
+# 7. Check the logs of the api-gateway
+echo "API Gateway logs:"
+kubectl logs -n microservices-app -l app=api-gateway --tail=50

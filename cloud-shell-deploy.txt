@@ -1,0 +1,43 @@
+# Cloud Shell Deployment Script
+
+# 1. Clone the repository to get the latest files with optimized resources
+git clone https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app.git
+cd Microserivces-spring-kafka-microservices-app
+
+# 2. Create namespace if it doesn't exist
+kubectl create namespace microservices-app --dry-run=client -o yaml | kubectl apply -f -
+
+# 3. Apply infrastructure components first (with reduced resources)
+kubectl apply -f k8s/infrastructure.yaml
+
+# 4. Wait for core infrastructure to be ready
+echo "Waiting for infrastructure components..."
+sleep 30
+kubectl get pods -n microservices-app
+
+# 5. Apply API Gateway
+kubectl apply -f k8s/api-gateway.yaml
+echo "Waiting for API Gateway..."
+sleep 30
+kubectl get pods -n microservices-app
+
+# 6. Apply monitoring components
+kubectl apply -f k8s/monitoring/prometheus-config.yaml
+kubectl apply -f k8s/monitoring/prometheus-deployment.yaml
+kubectl apply -f k8s/monitoring/grafana-deployment.yaml
+echo "Waiting for monitoring components..."
+sleep 30
+kubectl get pods -n microservices-app
+
+# 7. Apply logging components
+kubectl apply -f k8s/logging/elasticsearch-deployment.yaml
+kubectl apply -f k8s/logging/kibana-deployment.yaml
+kubectl apply -f k8s/logging/logstash-deployment.yaml
+echo "Waiting for logging components..."
+sleep 60
+kubectl get pods -n microservices-app
+
+# 8. Final status check
+echo "Final deployment status:"
+kubectl get pods -n microservices-app
+kubectl get services -n microservices-app

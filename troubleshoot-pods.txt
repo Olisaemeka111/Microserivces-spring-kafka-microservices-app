@@ -1,0 +1,37 @@
+# Troubleshooting CrashLoopBackOff Pods
+
+# 1. Check API Gateway logs
+echo "=== API Gateway Logs ==="
+kubectl logs -n microservices-app -l app=api-gateway --tail=50
+
+# 2. Check Kafka logs
+echo "=== Kafka Logs ==="
+kubectl logs -n microservices-app -l app=kafka --tail=50
+
+# 3. Check Product Service logs
+echo "=== Product Service Logs ==="
+kubectl logs -n microservices-app -l app=product-service --tail=50
+
+# 4. Check Order Service logs
+echo "=== Order Service Logs ==="
+kubectl logs -n microservices-app -l app=order-service --tail=50
+
+# 5. Check Inventory Service logs
+echo "=== Inventory Service Logs ==="
+kubectl logs -n microservices-app -l app=inventory-service --tail=50
+
+# 6. Check Notification Service logs
+echo "=== Notification Service Logs ==="
+kubectl logs -n microservices-app -l app=notification-service --tail=50
+
+# 7. Check pod descriptions for any issues
+echo "=== API Gateway Pod Description ==="
+kubectl describe pod -n microservices-app -l app=api-gateway
+
+# 8. Check environment variables for one of the services
+echo "=== API Gateway Environment Variables ==="
+kubectl exec -n microservices-app -l app=api-gateway -- env || echo "Could not execute command in container"
+
+# 9. Check if services can connect to each other
+echo "=== Testing Service Connectivity ==="
+kubectl get services -n microservices-app

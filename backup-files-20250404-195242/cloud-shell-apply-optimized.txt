@@ -1,0 +1,22 @@
+# Run these commands in Cloud Shell to apply the optimized configurations
+
+# First, clone your repository to get the latest files
+git clone https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app.git
+cd Microserivces-spring-kafka-microservices-app
+
+# Apply the optimized infrastructure components
+kubectl apply -f k8s/optimized-infrastructure.yaml
+
+# Apply the optimized microservices and monitoring components
+kubectl apply -f k8s/optimized-resources.yaml
+
+# Check the status of the pods
+kubectl get pods -n microservices-app
+
+# If you need to delete the existing deployments first to force recreation with new resource settings:
+kubectl delete deployment api-gateway product-service order-service inventory-service notification-service -n microservices-app
+kubectl delete deployment prometheus grafana -n microservices-app
+kubectl delete statefulset elasticsearch -n microservices-app
+
+# Then apply the optimized configurations again
+kubectl apply -f k8s/optimized-resources.yaml

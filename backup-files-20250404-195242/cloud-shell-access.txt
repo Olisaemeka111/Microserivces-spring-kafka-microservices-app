@@ -1,0 +1,82 @@
+# Accessing Your GKE Cluster and Application Using Google Cloud Shell
+
+Since you're having issues with local kubectl access, Google Cloud Shell provides a reliable alternative that requires no local setup.
+
+## 1. Access via Google Cloud Console
+
+1. Go to https://console.cloud.google.com/
+2. Navigate to Kubernetes Engine > Clusters
+3. Find your cluster "spring-kafka-cluster"
+4. Click the "Connect" button
+5. Click "Run in Cloud Shell"
+
+This will open a Cloud Shell session with kubectl already configured to access your cluster.
+
+## 2. Check Your Application Services
+
+Once connected, run these commands to check your services:
+
+```bash
+# List all services in your namespace
+kubectl get services -n microservices-app
+
+# Get the external IP of your API Gateway
+kubectl get service api-gateway -n microservices-app
+
+# Check the status of all pods
+kubectl get pods -n microservices-app
+```
+
+## 3. Access Your Application
+
+Your API Gateway should have an external IP address. You can access your application at:
+`http://<API-GATEWAY-EXTERNAL-IP>`
+
+## 4. Access Monitoring Dashboards
+
+Check if Grafana and Kibana are deployed:
+
+```bash
+# Get Grafana service
+kubectl get service grafana -n microservices-app
+
+# Get Kibana service
+kubectl get service kibana -n microservices-app
+```
+
+Access the dashboards at:
+- Grafana: `http://<GRAFANA-EXTERNAL-IP>` (username: admin, password: admin123)
+- Kibana: `http://<KIBANA-EXTERNAL-IP>`
+
+## 5. Troubleshoot Failing Pods
+
+For pods in CrashLoopBackOff state:
+
+```bash
+# Check logs for Kafka pod
+kubectl logs -l app=kafka -n microservices-app
+
+# Check logs for product-service pod
+kubectl logs -l app=product-service -n microservices-app
+
+# Describe the pods to see events
+kubectl describe pod -l app=kafka -n microservices-app
+kubectl describe pod -l app=product-service -n microservices-app
+```
+
+## 6. Port-Forward for Local Access (in Cloud Shell)
+
+If services don't have external IPs, you can use port-forwarding:
+
+```bash
+# Forward API Gateway to port 8080
+kubectl port-forward svc/api-gateway 8080:80 -n microservices-app
+
+# Forward Grafana to port 3000
+kubectl port-forward svc/grafana 3000:80 -n microservices-app
+
+# Forward Kibana to port 5601
+kubectl port-forward svc/kibana 5601:80 -n microservices-app
+```
+
+Then click the "Web Preview" button in Cloud Shell and select the appropriate port.

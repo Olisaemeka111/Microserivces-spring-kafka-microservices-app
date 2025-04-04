@@ -1,0 +1,74 @@
+# Accessing Your GKE Cluster Locally
+
+## 1. Install Required Tools
+Make sure you have these tools installed on your local machine:
+- Google Cloud SDK (gcloud)
+- kubectl
+
+## 2. Configure gcloud Authentication
+```powershell
+# Login to Google Cloud
+gcloud auth login
+
+# Set the project
+gcloud config set project spring-kafka-microservices
+```
+
+## 3. Get Credentials for Your GKE Cluster
+```powershell
+# Get credentials for your cluster
+gcloud container clusters get-credentials spring-kafka-cluster --zone us-central1 --project spring-kafka-microservices
+```
+
+This command will:
+- Download the cluster's certificate
+- Generate a kubeconfig entry
+- Set your current context to the GKE cluster
+
+## 4. Verify Connection
+```powershell
+# Check if you can access the cluster
+kubectl get nodes
+kubectl get namespaces
+```
+
+## 5. Check Your Microservices
+```powershell
+# Check resources in your namespace
+kubectl get all -n microservices-app
+```
+
+## 6. Access Services via Port-Forwarding
+Since you might not have direct access to the LoadBalancer IPs, you can use port-forwarding:
+
+```powershell
+# Port-forward Grafana to access on localhost:3000
+kubectl port-forward svc/grafana 3000:80 -n microservices-app
+
+# Port-forward Kibana to access on localhost:5601
+kubectl port-forward svc/kibana 5601:80 -n microservices-app
+
+# Port-forward API Gateway to access your microservices
+kubectl port-forward svc/api-gateway 8080:80 -n microservices-app
+```
+
+Then access:
+- Grafana: http://localhost:3000 (username: admin, password: admin123)
+- Kibana: http://localhost:5601
+- API Gateway: http://localhost:8080
+
+## 7. View Logs Directly
+```powershell
+# View logs for a specific service
+kubectl logs -l app=order-service -n microservices-app --tail=100
+kubectl logs -l app=product-service -n microservices-app --tail=100
+```
+
+## Troubleshooting
+If you encounter authentication issues:
+```powershell
+# Revoke previous credentials and try again
+gcloud auth revoke
+gcloud auth login
+gcloud container clusters get-credentials spring-kafka-cluster --zone us-central1 --project spring-kafka-microservices
+```

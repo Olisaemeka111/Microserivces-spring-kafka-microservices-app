@@ -1,0 +1,85 @@
+# Setting Up Google Cloud SDK and kubectl for GKE Access
+
+## 1. Install Google Cloud SDK
+If you haven't already installed the Google Cloud SDK, download and install it from:
+https://cloud.google.com/sdk/docs/install
+
+## 2. Add Google Cloud SDK to PATH
+After installation, you need to add the Google Cloud SDK to your PATH:
+
+```powershell
+# Add Google Cloud SDK to PATH
+$env:PATH += ";C:\Program Files (x86)\Google\Cloud SDK\google-cloud-sdk\bin"
+
+# To make this permanent, you can add it to your PowerShell profile
+# Open PowerShell profile in Notepad
+notepad $PROFILE
+
+# Add this line to your profile
+# $env:PATH += ";C:\Program Files (x86)\Google\Cloud SDK\google-cloud-sdk\bin"
+```
+
+## 3. Initialize Google Cloud SDK
+
+```powershell
+# Initialize gcloud
+gcloud init
+```
+
+## 4. Install kubectl
+
+```powershell
+# Install kubectl using gcloud
+gcloud components install kubectl
+```
+
+## 5. Install GKE Auth Plugin
+
+```powershell
+# Install the GKE auth plugin
+gcloud components install gke-gcloud-auth-plugin
+
+# Set the environment variable
+$env:USE_GKE_GCLOUD_AUTH_PLUGIN = "True"
+```
+
+## 6. Get GKE Cluster Credentials
+
+```powershell
+# Get credentials for your GKE cluster
+gcloud container clusters get-credentials spring-kafka-cluster --zone us-central1 --project spring-kafka-microservices
+```
+
+## 7. Verify Connection
+
+```powershell
+# Check if you can access the cluster
+kubectl get nodes
+```
+
+## 8. Access Monitoring and Logging
+
+Once you have access to your cluster, you can deploy the monitoring and logging components:
+
+```powershell
+# Apply monitoring components
+kubectl apply -f k8s/monitoring/prometheus-config.yaml
+kubectl apply -f k8s/monitoring/prometheus-deployment.yaml
+kubectl apply -f k8s/monitoring/grafana-deployment.yaml
+
+# Apply logging components
+kubectl apply -f k8s/logging/elasticsearch-deployment.yaml
+kubectl apply -f k8s/logging/kibana-deployment.yaml
+kubectl apply -f k8s/logging/logstash-deployment.yaml
+kubectl apply -f k8s/logging/filebeat-deployment.yaml
+```
+
+## 9. Access Services via Port-Forwarding
+
+```powershell
+# Port-forward Grafana to access on localhost:3000
+kubectl port-forward svc/grafana 3000:80 -n microservices-app
+
+# Port-forward Kibana to access on localhost:5601
+kubectl port-forward svc/kibana 5601:80 -n microservices-app
+```

@@ -1,0 +1,20 @@
+# How to Trigger the GitHub Actions Workflow
+
+# Option 1: Manually trigger the workflow from GitHub UI
+1. Go to your GitHub repository: https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app
+2. Click on the "Actions" tab
+3. Select "Deploy Optimized Resources to GKE" workflow
+4. Click on "Run workflow" button (dropdown on the right)
+5. Select the main branch
+6. Click "Run workflow"
+
+# Option 2: Make a small change to a Kubernetes file to trigger the workflow automatically
+# You can run these commands in your local repository:
+
+# Make a small comment change to infrastructure.yaml
+echo "# Triggered deployment $(date)" >> k8s/infrastructure.yaml
+git add k8s/infrastructure.yaml
+git commit -m "Trigger deployment workflow"
+git push origin main
+
+# The workflow will automatically start when the push is detected

@@ -1,0 +1,68 @@
+# Checking Your Application Status Using Google Cloud Shell
+
+Since we're having persistent issues with the gke-gcloud-auth-plugin locally, follow these steps to check your application status using Google Cloud Shell:
+
+## 1. Access Google Cloud Shell
+
+1. Go to https://console.cloud.google.com/
+2. Click the Cloud Shell icon (>_) in the top right corner of the console
+3. This opens a terminal at the bottom of your browser window
+
+## 2. Run These Commands in Cloud Shell
+
+```bash
+# Get credentials for your cluster
+gcloud container clusters get-credentials spring-kafka-cluster --zone us-central1 --project spring-kafka-microservices
+
+# Check if the microservices-app namespace exists
+kubectl get namespace microservices-app
+
+# Check all resources in your namespace
+kubectl get all -n microservices-app
+
+# Check the status of your API Gateway and get its external IP
+kubectl get service api-gateway -n microservices-app
+
+# Check if monitoring components are deployed
+kubectl get service grafana -n microservices-app
+kubectl get service prometheus -n microservices-app
+kubectl get service kibana -n microservices-app
+```
+
+## 3. Access Your Application
+
+Once you have the external IP of your API Gateway, you can access your application at:
+`http://<API-GATEWAY-EXTERNAL-IP>`
+
+## 4. Access Monitoring Dashboards
+
+Similarly, access your monitoring dashboards at:
+- Grafana: `http://<GRAFANA-EXTERNAL-IP>` (username: admin, password: admin123)
+- Kibana: `http://<KIBANA-EXTERNAL-IP>`
+
+## 5. Troubleshoot CrashLoopBackOff Pods
+
+If any pods are in CrashLoopBackOff state, check their logs:
+
+```bash
+# Check logs for Kafka pod
+kubectl logs -l app=kafka -n microservices-app
+
+# Check logs for product-service pod
+kubectl logs -l app=product-service -n microservices-app
+
+# Describe the pods to see events
+kubectl describe pod -l app=kafka -n microservices-app
+kubectl describe pod -l app=product-service -n microservices-app
+```
+
+## 6. Use Port-Forwarding in Cloud Shell
+
+If you prefer to use port-forwarding:
+
+```bash
+# Forward API Gateway to port 8080
+kubectl port-forward svc/api-gateway 8080:80 -n microservices-app
+```
+
+Then click the "Web Preview" button in Cloud Shell and select port 8080.

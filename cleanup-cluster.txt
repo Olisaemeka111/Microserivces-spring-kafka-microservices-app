@@ -1,0 +1,41 @@
+# Clean up and redeploy with optimized resources
+
+# 1. Delete all existing deployments to start fresh
+kubectl delete deployment --all -n microservices-app
+kubectl delete statefulset --all -n microservices-app
+
+# 2. Wait for all resources to be fully deleted
+sleep 30
+
+# 3. Apply infrastructure components first (with reduced resources)
+kubectl apply -f k8s/infrastructure.yaml
+
+# 4. Wait for core infrastructure to be ready
+kubectl rollout status deployment/zookeeper -n microservices-app --timeout=300s
+kubectl rollout status deployment/mongodb -n microservices-app --timeout=300s
+kubectl get pods -n microservices-app
+
+# 5. Apply microservices one by one
+kubectl apply -f k8s/api-gateway.yaml
+kubectl rollout status deployment/api-gateway -n microservices-app --timeout=300s
+
+# 6. Apply monitoring components
+kubectl apply -f k8s/monitoring/prometheus-config.yaml
+kubectl apply -f k8s/monitoring/prometheus-deployment.yaml
+kubectl rollout status deployment/prometheus -n microservices-app --timeout=300s
+
+kubectl apply -f k8s/monitoring/grafana-deployment.yaml
+kubectl rollout status deployment/grafana -n microservices-app --timeout=300s
+
+# 7. Apply logging components
+kubectl apply -f k8s/logging/elasticsearch-deployment.yaml
+kubectl rollout status statefulset/elasticsearch -n microservices-app --timeout=300s
+
+kubectl apply -f k8s/logging/kibana-deployment.yaml
+kubectl rollout status deployment/kibana -n microservices-app --timeout=300s
+
+kubectl apply -f k8s/logging/logstash-deployment.yaml
+kubectl rollout status deployment/logstash -n microservices-app --timeout=300s
+
+# 8. Check final status
+kubectl get pods -n microservices-app
