@@ -73,14 +73,14 @@ spec:
           subPath: logstash.conf
         env:
         - name: LS_JAVA_OPTS
-          value: "-Xmx512m -Xms512m"
+          value: "-Xmx256m -Xms256m"
         resources:
           requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
             cpu: 200m
             memory: 512Mi
-          limits:
-            cpu: 500m
-            memory: 1Gi
       volumes:
       - name: logstash-config
         configMap:
