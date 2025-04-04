@@ -1,0 +1,19 @@
+# Commands to troubleshoot the discovery-server pod
+
+# 1. Check the detailed status of the discovery-server pod
+kubectl describe pod -n microservices-app -l app=discovery-server
+
+# 2. Check the logs of the discovery-server pod (if available)
+kubectl logs -n microservices-app -l app=discovery-server
+
+# 3. Check if the image exists and is accessible
+docker pull springcloud/eureka-server:latest
+
+# 4. Try an alternative image for Eureka server
+kubectl set image deployment/discovery-server -n microservices-app discovery-server=steeltoeoss/eureka-server:latest
+
+# 5. Check the status after changing the image
+kubectl get pods -n microservices-app -l app=discovery-server
+
+# 6. Check the events in the namespace to see if there are any resource constraints
+kubectl get events -n microservices-app --sort-by='.lastTimestamp'

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: product-service
-        image: gcr.io/${PROJECT_ID}/product-service:${COMMIT_SHA}
+        image: us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/product-service:${COMMIT_SHA}
         ports:
         - containerPort: 8080
         env:
@@ -64,7 +64,7 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: gcr.io/${PROJECT_ID}/order-service:${COMMIT_SHA}
+        image: us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/order-service:${COMMIT_SHA}
         ports:
         - containerPort: 8081
         env:
@@ -114,7 +114,7 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: gcr.io/${PROJECT_ID}/inventory-service:${COMMIT_SHA}
+        image: us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/inventory-service:${COMMIT_SHA}
         ports:
         - containerPort: 8082
         env:
@@ -162,7 +162,7 @@ spec:
     spec:
       containers:
       - name: notification-service
-        image: gcr.io/${PROJECT_ID}/notification-service:${COMMIT_SHA}
+        image: us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/notification-service:${COMMIT_SHA}
         ports:
         - containerPort: 8083
         env:

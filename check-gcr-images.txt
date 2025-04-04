@@ -1,0 +1,28 @@
+# Commands to check images in Google Container Registry
+
+# List all repositories in Artifact Registry
+gcloud artifacts repositories list --project=${PROJECT_ID}
+
+# List all images in the microservices repository
+gcloud artifacts docker images list us-central1-docker.pkg.dev/${PROJECT_ID}/microservices --include-tags
+
+# Check if the discovery-server image exists
+gcloud artifacts docker images list us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/discovery-server --include-tags
+
+# Check if the api-gateway image exists
+gcloud artifacts docker images list us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/api-gateway --include-tags
+
+# Check if the repository exists
+gcloud artifacts repositories describe microservices --project=${PROJECT_ID} --location=us-central1
+
+# Create repository if it doesn't exist
+# gcloud artifacts repositories create microservices --repository-format=docker --location=us-central1 --description="Docker repository for microservices"
+
+# Check IAM permissions for the repository
+gcloud artifacts repositories get-iam-policy microservices --location=us-central1 --project=${PROJECT_ID}
+
+# Grant permissions to the GKE service account to pull images
+# gcloud artifacts repositories add-iam-policy-binding microservices \
+#   --location=us-central1 \
+#   --member=serviceAccount:${GKE_SERVICE_ACCOUNT} \
+#   --role=roles/artifactregistry.reader
