@@ -120,7 +120,7 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: mongo:latest
+        image: mongo:6.0
         ports:
         - containerPort: 27017
         env:
@@ -188,7 +188,7 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: mysql:latest
+        image: mysql:8.0
         ports:
         - containerPort: 3306
         env:
@@ -258,7 +258,7 @@ spec:
     spec:
       containers:
       - name: mysql-in
-        image: mysql:latest
+        image: mysql:8.0
         ports:
         - containerPort: 3306
         env:

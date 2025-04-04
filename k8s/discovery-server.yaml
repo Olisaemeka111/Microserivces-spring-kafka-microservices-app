@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: discovery-server
-        image: steeltoeoss/eureka-server:latest
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/discovery-server:42f2df3
         ports:
         - containerPort: 8761
         env:
