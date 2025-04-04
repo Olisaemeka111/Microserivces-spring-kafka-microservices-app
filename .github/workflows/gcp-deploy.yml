@@ -35,12 +35,7 @@ jobs:
         echo "## Build completed on $(date)" >> build-report.md
         echo "### Maven Build Results" >> build-report.md
         echo "- Package built successfully" >> build-report.md
-        
-    - name: Upload build report
-      uses: actions/upload-artifact@v2.3.1
-      with:
-        name: build-report
-        path: build-report.md
+        cat build-report.md
         
     - name: Package JAR files
       run: |
@@ -49,9 +44,4 @@ jobs:
         cp inventory-service/target/*.jar artifacts/inventory-service.jar || true
         cp product-service/target/*.jar artifacts/product-service.jar || true
         cp notification-service/target/*.jar artifacts/notification-service.jar || true
-        
-    - name: Upload JAR artifacts
-      uses: actions/upload-artifact@v2.3.1
-      with:
-        name: service-jars
-        path: artifacts
+        ls -la artifacts

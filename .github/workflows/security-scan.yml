@@ -38,9 +38,4 @@ jobs:
         echo "## Scan completed on $(date)" >> security-report.md
         echo "### Dependency Check Results" >> security-report.md
         echo "- See Maven build logs for details" >> security-report.md
-        
-    - name: Upload security report
-      uses: actions/upload-artifact@v2.3.1
-      with:
-        name: security-report
-        path: security-report.md
+        cat security-report.md
