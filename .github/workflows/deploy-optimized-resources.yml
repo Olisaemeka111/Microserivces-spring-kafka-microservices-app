@@ -1,0 +1,66 @@
+name: Deploy Optimized Resources to GKE
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'k8s/optimized-*.yaml'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: spring-kafka-microservices
+  GKE_CLUSTER: spring-kafka-cluster
+  GKE_ZONE: us-central1
+
+jobs:
+  deploy:
+    name: Deploy to GKE
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+        
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+        
+    - name: Create namespace if not exists
+      run: kubectl create namespace microservices-app --dry-run=client -o yaml | kubectl apply -f -
+      
+    - name: Deploy infrastructure components
+      run: kubectl apply -f k8s/optimized-infrastructure.yaml
+      
+    - name: Deploy microservices and monitoring
+      run: kubectl apply -f k8s/optimized-resources.yaml
+      
+    - name: Wait for deployments
+      run: |
+        echo "Waiting for infrastructure components to be ready..."
+        kubectl rollout status deployment/kafka -n microservices-app --timeout=300s || true
+        kubectl rollout status deployment/mongodb -n microservices-app --timeout=300s || true
+        kubectl rollout status deployment/mysql -n microservices-app --timeout=300s || true
+        kubectl rollout status deployment/mysql-in -n microservices-app --timeout=300s || true
+        
+        echo "Waiting for microservices to be ready..."
+        kubectl rollout status deployment/api-gateway -n microservices-app --timeout=300s || true
+        kubectl rollout status deployment/product-service -n microservices-app --timeout=300s || true
+        kubectl rollout status deployment/order-service -n microservices-app --timeout=300s || true
+        kubectl rollout status deployment/inventory-service -n microservices-app --timeout=300s || true
+        kubectl rollout status deployment/notification-service -n microservices-app --timeout=300s || true
+        
+    - name: Check deployment status
+      run: |
+        echo "Checking pod status..."
+        kubectl get pods -n microservices-app
+        
+        echo "Checking services..."
+        kubectl get services -n microservices-app
