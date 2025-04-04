@@ -1,19 +1,16 @@
 FROM maven:3.8.5-openjdk-17-slim AS build
+
+# Set working directory
 WORKDIR /app
 
-# Copy the parent POM first
-COPY pom.xml /app/parent-pom.xml
+# Copy the parent POM
+COPY pom.xml /app/
 
-# Create directory for the module
-RUN mkdir -p /app/discovery-server
+# Copy the module
+COPY discovery-server /app/discovery-server/
 
-# Copy the module POM and source code
-COPY pom.xml /app/discovery-server/
-COPY src /app/discovery-server/src/
-
-# Build from the module directory with reference to parent
-WORKDIR /app/discovery-server
-RUN mvn clean package -DskipTests -Dparent.relativePath=../parent-pom.xml
+# Build from the root directory
+RUN mvn -B -f discovery-server/pom.xml clean package -DskipTests
 
 FROM openjdk:17-jdk-slim
 WORKDIR /app

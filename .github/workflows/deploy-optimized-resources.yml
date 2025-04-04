@@ -43,7 +43,7 @@ jobs:
         context: .
         file: ./discovery-server/Dockerfile
         push: true
-        tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/discovery-server:latest
+        tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/discovery-server:${{ github.sha }}
         
     - name: Build and Push API Gateway Image
       uses: docker/build-push-action@v4
@@ -51,7 +51,7 @@ jobs:
         context: .
         file: ./api-gateway/Dockerfile
         push: true
-        tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/api-gateway:latest
+        tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/api-gateway:${{ github.sha }}
         
     - name: Get GKE credentials
       uses: google-github-actions/get-gke-credentials@v1
@@ -78,12 +78,21 @@ jobs:
         
     - name: Deploy Discovery Server (Eureka)
       run: |
+        # Replace placeholder with actual SHA
+        sed -i "s/\${GITHUB_SHA}/${{ github.sha }}/g" k8s/discovery-server.yaml
+        sed -i "s/\${PROJECT_ID}/${{ env.PROJECT_ID }}/g" k8s/discovery-server.yaml
         kubectl apply -f k8s/discovery-server.yaml
         sleep 60  # Wait for discovery server to be ready
         kubectl get pods -n microservices-app -l app=discovery-server
         
     - name: Deploy API Gateway
-      run: kubectl apply -f k8s/api-gateway.yaml
+      run: |
+        # Replace placeholder with actual SHA
+        sed -i "s/\${GITHUB_SHA}/${{ github.sha }}/g" k8s/api-gateway.yaml
+        sed -i "s/\${PROJECT_ID}/${{ env.PROJECT_ID }}/g" k8s/api-gateway.yaml
+        kubectl apply -f k8s/api-gateway.yaml
+        sleep 30  # Wait for API gateway to start deploying
+        kubectl get pods -n microservices-app -l app=api-gateway
         
     - name: Deploy monitoring components
       run: |

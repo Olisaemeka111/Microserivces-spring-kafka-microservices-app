@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/api-gateway:latest
+        image: us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/api-gateway:${GITHUB_SHA}
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
