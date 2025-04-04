@@ -1,0 +1,13 @@
+:: Commands for creating a new service account key in Windows Command Prompt
+
+:: Set the active account
+gcloud config set account olissa.arinze1@gmail.com
+
+:: Set the project
+gcloud config set project spring-kafka-microservices
+
+:: Create a new service account key (all on one line)
+gcloud iam service-accounts keys create github-actions-key-new.json --iam-account=github-actions@spring-kafka-microservices.iam.gserviceaccount.com
+
+:: View the key content
+type github-actions-key-new.json

@@ -1,0 +1,57 @@
+# Instructions for Creating a New GCP Service Account Key
+
+## Option 1: Using Google Cloud SDK CLI
+
+```bash
+# Make sure you're using the correct account
+gcloud auth list
+
+# Set the active account if needed
+gcloud config set account olissa.arinze1@gmail.com
+
+# Set the project
+gcloud config set project spring-kafka-microservices
+
+# Create a new service account key
+gcloud iam service-accounts keys create github-actions-key-new.json \
+  --iam-account=github-actions@spring-kafka-microservices.iam.gserviceaccount.com
+
+# Verify the key was created
+cat github-actions-key-new.json
+```
+
+The new key file will be created in your current directory as `github-actions-key-new.json`.
+
+## Option 2: Using Google Cloud Console
+1. Open https://console.cloud.google.com/
+2. Make sure you're in the "spring-kafka-microservices" project
+3. Navigate to IAM & Admin > Service Accounts
+4. Find the "github-actions@spring-kafka-microservices.iam.gserviceaccount.com" service account
+5. Click on the three dots (actions menu) and select "Manage keys"
+6. Click "ADD KEY" > "Create new key"
+7. Choose JSON as the key type
+8. Click "CREATE"
+9. The key file will be automatically downloaded to your computer
+
+## Step 3: Update the GitHub Secret
+1. Go to your GitHub repository
+2. Navigate to Settings > Secrets and variables > Actions
+3. Edit the "GCP_SA_KEY" secret
+4. Delete the current value
+5. Copy the ENTIRE content of the newly downloaded JSON key file
+6. Paste it as the new value for the "GCP_SA_KEY" secret
+7. Click "Update secret"
+
+## Step 4: Run the Workflow Again
+1. Go to the "Actions" tab in your GitHub repository
+2. Select the "GCP Authentication Test" workflow
+3. Click "Run workflow"
+
+## Additional Troubleshooting Steps
+If you still encounter issues, check that:
+1. The service account has the necessary permissions:
+   - Kubernetes Engine Admin
+   - Storage Admin
+   - Container Registry Service Agent
+2. The service account is active and not disabled
+3. The JSON key is properly formatted in the GitHub secret (no extra spaces or line breaks)

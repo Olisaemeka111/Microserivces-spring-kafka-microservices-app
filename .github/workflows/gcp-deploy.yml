@@ -30,8 +30,16 @@ jobs:
     - name: 'Use gcloud CLI'
       run: 'gcloud info'
       
-    - name: 'List GCP projects'
-      run: 'gcloud projects list'
+    - name: 'Enable necessary APIs'
+      run: |
+        gcloud services enable cloudresourcemanager.googleapis.com
+        gcloud services enable container.googleapis.com
+        gcloud services enable containerregistry.googleapis.com
+        gcloud services enable iam.googleapis.com
+      continue-on-error: true
       
     - name: 'Print current project'
       run: 'gcloud config get-value project'
+      
+    - name: 'Verify GKE cluster access'
+      run: 'gcloud container clusters list --zone ${{ env.GKE_ZONE }}'
