@@ -9,7 +9,8 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
   GKE_ZONE: ${{ secrets.GKE_ZONE }}
-  REGISTRY: gcr.io
+  REGISTRY: us-central1-docker.pkg.dev
+  REPOSITORY: spring-kafka-microservices
   ORDER_SERVICE_IMAGE: order-service
   PRODUCT_SERVICE_IMAGE: product-service
   INVENTORY_SERVICE_IMAGE: inventory-service
@@ -50,13 +51,14 @@ jobs:
     - name: 'Set up Docker Auth'
       run: |
         gcloud --quiet auth configure-docker
+        gcloud --quiet auth configure-docker us-central1-docker.pkg.dev
 
     # Enable necessary APIs
     - name: 'Enable necessary APIs'
       run: |
         gcloud services enable cloudresourcemanager.googleapis.com
         gcloud services enable container.googleapis.com
-        gcloud services enable containerregistry.googleapis.com
+        gcloud services enable artifactregistry.googleapis.com
         gcloud services enable iam.googleapis.com
       continue-on-error: true
 
@@ -67,34 +69,43 @@ jobs:
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
 
+    # Create Artifact Registry repository if it doesn't exist
+    - name: Create Artifact Registry Repository
+      run: |
+        gcloud artifacts repositories create ${{ env.REPOSITORY }} \
+          --repository-format=docker \
+          --location=us-central1 \
+          --description="Repository for Spring Kafka Microservices" \
+          --quiet || true
+      
     # Build and push Docker images
     - name: Build and Push Order Service
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }} ./order-service
-        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }}
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }} ./order-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }}
 
     - name: Build and Push Product Service
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }} ./product-service
-        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }}
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }} ./product-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }}
 
     - name: Build and Push Inventory Service
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }} ./inventory-service
-        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }}
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }} ./inventory-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }}
 
     - name: Build and Push Notification Service
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }} ./notification-service
-        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }} ./notification-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}
 
     # Update the Kubernetes manifests with the new image tags
     - name: Update Kubernetes manifests
       run: |
-        sed -i "s|image: .*order-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
-        sed -i "s|image: .*product-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
-        sed -i "s|image: .*inventory-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
-        sed -i "s|image: .*notification-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*order-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*product-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*inventory-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*notification-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
 
     # Deploy the application to GKE
     - name: Deploy to GKE

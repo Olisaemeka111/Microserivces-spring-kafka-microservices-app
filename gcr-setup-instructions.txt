@@ -1,0 +1,41 @@
+# Google Container Registry (GCR) Setup Instructions
+
+## 1. Enable Container Registry API (Already Done)
+You've already enabled the Container Registry API, which is great!
+
+## 2. Grant Required Permissions to Service Account
+Your service account needs additional permissions to push to GCR. Here's how to add them:
+
+1. Go to the Google Cloud Console: https://console.cloud.google.com/
+2. Navigate to IAM & Admin > IAM
+3. Find your service account (github-actions@spring-kafka-microservices.iam.gserviceaccount.com)
+4. Click the pencil icon to edit permissions
+5. Click "ADD ANOTHER ROLE"
+6. Add the following roles:
+   - Storage Admin (roles/storage.admin)
+   - Artifact Registry Writer (roles/artifactregistry.writer)
+   - Artifact Registry Repository Administrator (roles/artifactregistry.admin)
+7. Click "Save"
+
+## 3. Create a GCR Repository (Optional)
+You can pre-create the GCR repository to avoid the "createOnPush" permission issue:
+
+1. Go to Artifact Registry > Repositories
+2. Click "CREATE REPOSITORY"
+3. Name: "spring-kafka-microservices"
+4. Format: Docker
+5. Mode: Standard
+6. Location type: Region
+7. Region: us-central1 (same as your GKE cluster)
+8. Click "CREATE"
+
+## 4. Alternative: Use Artifact Registry Instead
+Google recommends using Artifact Registry instead of Container Registry. To switch:
+
+1. Update the workflow file to use Artifact Registry instead of GCR:
+   - Change `REGISTRY: gcr.io` to `REGISTRY: us-central1-docker.pkg.dev`
+   - Update Docker build/push commands to use:
+     `us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/spring-kafka-microservices/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }}`
+
+## 5. Run the Workflow Again
+After making these changes, run the workflow again to see if the issue is resolved.
