@@ -1,0 +1,111 @@
+name: Deploy Monitoring and Logging
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'k8s/monitoring/**'
+      - 'k8s/logging/**'
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+
+jobs:
+  deploy-monitoring-logging:
+    name: Deploy Monitoring and Logging
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Setup Google Cloud CLI
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+
+    # Get the GKE credentials
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Deploy Prometheus and Grafana for monitoring
+    - name: Deploy Prometheus
+      run: |
+        kubectl apply -f k8s/monitoring/prometheus-config.yaml
+        kubectl apply -f k8s/monitoring/prometheus-deployment.yaml
+        
+    - name: Deploy Grafana
+      run: |
+        kubectl apply -f k8s/monitoring/grafana-deployment.yaml
+        
+    # Deploy ELK Stack for logging
+    - name: Deploy Elasticsearch
+      run: |
+        kubectl apply -f k8s/logging/elasticsearch-deployment.yaml
+        
+    - name: Deploy Kibana
+      run: |
+        kubectl apply -f k8s/logging/kibana-deployment.yaml
+        
+    - name: Deploy Logstash
+      run: |
+        kubectl apply -f k8s/logging/logstash-deployment.yaml
+        
+    - name: Deploy Filebeat
+      run: |
+        kubectl apply -f k8s/logging/filebeat-deployment.yaml
+        
+    # Wait for deployments to be ready
+    - name: Wait for deployments
+      run: |
+        echo "Waiting for Prometheus deployment..."
+        kubectl rollout status deployment prometheus -n microservices-app --timeout=300s
+        
+        echo "Waiting for Grafana deployment..."
+        kubectl rollout status deployment grafana -n microservices-app --timeout=300s
+        
+        echo "Waiting for Elasticsearch statefulset..."
+        kubectl rollout status statefulset elasticsearch -n microservices-app --timeout=300s
+        
+        echo "Waiting for Kibana deployment..."
+        kubectl rollout status deployment kibana -n microservices-app --timeout=300s
+        
+        echo "Waiting for Logstash deployment..."
+        kubectl rollout status deployment logstash -n microservices-app --timeout=300s
+        
+    # Get service URLs
+    - name: Get service URLs
+      run: |
+        echo "Getting service URLs..."
+        
+        # Wait for LoadBalancer IPs to be assigned
+        for i in {1..10}; do
+          GRAFANA_IP=$(kubectl get service grafana -n microservices-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          KIBANA_IP=$(kubectl get service kibana -n microservices-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          
+          if [ -n "$GRAFANA_IP" ] && [ -n "$KIBANA_IP" ]; then
+            break
+          fi
+          
+          echo "Waiting for LoadBalancer IPs to be assigned... (attempt $i/10)"
+          sleep 30
+        done
+        
+        echo "Monitoring and Logging URLs:"
+        echo "Grafana: http://$GRAFANA_IP"
+        echo "Kibana: http://$KIBANA_IP"
+        
+        echo "Grafana credentials:"
+        echo "Username: admin"
+        echo "Password: admin123"

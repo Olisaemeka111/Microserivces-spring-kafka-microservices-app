@@ -1,0 +1,61 @@
+# Commands to Check Deployment Status in GKE
+
+## 1. Check Namespace Status
+```
+kubectl get namespace microservices-app
+```
+
+## 2. Check All Resources in the Namespace
+```
+kubectl get all -n microservices-app
+```
+
+## 3. Check Deployments Status
+```
+kubectl get deployments -n microservices-app
+```
+
+## 4. Check Pods Status
+```
+kubectl get pods -n microservices-app
+```
+
+## 5. Check Services and Their External IPs
+```
+kubectl get services -n microservices-app
+```
+
+## 6. Check API Gateway Status Specifically
+```
+kubectl describe deployment api-gateway -n microservices-app
+kubectl get pods -l app=api-gateway -n microservices-app
+kubectl logs -l app=api-gateway -n microservices-app --tail=100
+```
+
+## 7. Check ConfigMaps
+```
+kubectl get configmaps -n microservices-app
+kubectl describe configmap api-gateway-config -n microservices-app
+```
+
+## 8. Check Horizontal Pod Autoscaler
+```
+kubectl get hpa -n microservices-app
+```
+
+## 9. Check Events for Troubleshooting
+```
+kubectl get events -n microservices-app --sort-by='.lastTimestamp'
+```
+
+## 10. Get API Gateway External IP
+```
+kubectl get service api-gateway -n microservices-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+
+## 11. Test API Gateway Connectivity
+Once you have the external IP, you can test connectivity to your services:
+```
+curl http://<EXTERNAL_IP>/api/products/
+curl http://<EXTERNAL_IP>/api/orders/
+```
