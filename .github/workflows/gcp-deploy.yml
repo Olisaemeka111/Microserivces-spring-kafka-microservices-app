@@ -10,7 +10,7 @@ env:
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
   GKE_ZONE: ${{ secrets.GKE_ZONE }}
   REGISTRY: us-central1-docker.pkg.dev
-  REPOSITORY: spring-kafka-microservices
+  REPOSITORY: microservices
   ORDER_SERVICE_IMAGE: order-service
   PRODUCT_SERVICE_IMAGE: product-service
   INVENTORY_SERVICE_IMAGE: inventory-service
@@ -70,17 +70,9 @@ jobs:
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
 
-    # Create Artifact Registry repository if it doesn't exist
-    - name: Create Artifact Registry Repository
+    # Verify repository access
+    - name: Verify Artifact Registry Repository
       run: |
-        echo "Creating Artifact Registry repository..."
-        gcloud artifacts repositories create ${{ env.REPOSITORY }} \
-          --repository-format=docker \
-          --location=us-central1 \
-          --description="Repository for Spring Kafka Microservices" \
-          --quiet || echo "Repository may already exist or there was an error creating it."
-        
-        # Verify repository exists and service account has access
         echo "Verifying repository access..."
         gcloud artifacts repositories list --location=us-central1
         

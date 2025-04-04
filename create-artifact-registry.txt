@@ -1,0 +1,58 @@
+# Manual Setup for Google Artifact Registry
+
+Follow these steps to manually create the Artifact Registry repository that will store your Docker images.
+
+## 1. Open Google Cloud SDK Shell
+
+## 2. Set the project
+```
+gcloud config set project spring-kafka-microservices
+```
+
+## 3. Create the Artifact Registry repository
+```
+gcloud artifacts repositories create spring-kafka-microservices \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="Repository for Spring Kafka Microservices"
+```
+
+## 4. Verify the repository was created
+```
+gcloud artifacts repositories list --location=us-central1
+```
+
+## 5. Grant permissions to your service account
+```
+gcloud artifacts repositories add-iam-policy-binding spring-kafka-microservices \
+  --location=us-central1 \
+  --member="serviceAccount:github-actions@spring-kafka-microservices.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+```
+
+## 6. Configure Docker to use Google Cloud credentials
+```
+gcloud auth configure-docker us-central1-docker.pkg.dev
+```
+
+## 7. Verify repository access
+After completing these steps, run the GitHub Actions workflow again to see if it can now push to the repository.
+
+## Additional Troubleshooting
+
+If you still encounter issues, check:
+
+1. **Service Account Permissions**: Make sure your service account has these roles:
+   - Artifact Registry Writer (roles/artifactregistry.writer)
+   - Artifact Registry Repository Administrator (roles/artifactregistry.admin)
+   - Storage Admin (roles/storage.admin)
+
+2. **API Enablement**: Ensure the Artifact Registry API is enabled:
+   ```
+   gcloud services enable artifactregistry.googleapis.com
+   ```
+
+3. **Repository Path**: Verify the repository path in your workflow matches exactly:
+   ```
+   us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/[IMAGE_NAME]
+   ```
