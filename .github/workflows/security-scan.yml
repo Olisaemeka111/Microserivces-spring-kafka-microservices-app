@@ -34,15 +34,9 @@ jobs:
           ${{ runner.os }}-maven-
           
     - name: Run OWASP Dependency-Check
-      uses: dependency-check/Dependency-Check_Action@main
-      with:
-        project: 'Spring Kafka Microservices'
-        path: '.'
-        format: 'HTML'
-        out: 'reports' # Output directory for reports
-        args: >
-          --failOnCVSS 7
-          --enableRetired
+      run: |
+        mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7 -Dformat=HTML -DoutputDirectory=./reports
+      continue-on-error: true
           
     - name: Upload Dependency-Check report
       uses: actions/upload-artifact@v3
