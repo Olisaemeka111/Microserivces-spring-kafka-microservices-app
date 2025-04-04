@@ -1,21 +1,40 @@
-name: GCP Authentication Test
+name: Build and Deploy to GKE
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
   GKE_ZONE: ${{ secrets.GKE_ZONE }}
+  REGISTRY: gcr.io
+  ORDER_SERVICE_IMAGE: order-service
+  PRODUCT_SERVICE_IMAGE: product-service
+  INVENTORY_SERVICE_IMAGE: inventory-service
+  NOTIFICATION_SERVICE_IMAGE: notification-service
 
 jobs:
-  auth-test:
-    name: Test GCP Authentication
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    # Setup Java
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    # Build with Maven
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml -DskipTests
 
     # Setup Google Cloud CLI
     - id: 'auth'
@@ -27,9 +46,12 @@ jobs:
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
 
-    - name: 'Use gcloud CLI'
-      run: 'gcloud info'
-      
+    # Configure Docker to use the gcloud command-line tool as a credential helper
+    - name: 'Set up Docker Auth'
+      run: |
+        gcloud --quiet auth configure-docker
+
+    # Enable necessary APIs
     - name: 'Enable necessary APIs'
       run: |
         gcloud services enable cloudresourcemanager.googleapis.com
@@ -37,9 +59,47 @@ jobs:
         gcloud services enable containerregistry.googleapis.com
         gcloud services enable iam.googleapis.com
       continue-on-error: true
-      
-    - name: 'Print current project'
-      run: 'gcloud config get-value project'
-      
-    - name: 'Verify GKE cluster access'
-      run: 'gcloud container clusters list --zone ${{ env.GKE_ZONE }}'
+
+    # Get the GKE credentials
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Build and push Docker images
+    - name: Build and Push Order Service
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }} ./order-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }}
+
+    - name: Build and Push Product Service
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }} ./product-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }}
+
+    - name: Build and Push Inventory Service
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }} ./inventory-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }}
+
+    - name: Build and Push Notification Service
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }} ./notification-service
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}
+
+    # Update the Kubernetes manifests with the new image tags
+    - name: Update Kubernetes manifests
+      run: |
+        sed -i "s|image: .*order-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.ORDER_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*product-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.PRODUCT_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*inventory-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.INVENTORY_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+        sed -i "s|image: .*notification-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
+
+    # Deploy the application to GKE
+    - name: Deploy to GKE
+      run: |
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/infrastructure.yaml
+        kubectl apply -f k8s/services.yaml
+        kubectl get services -n microservices-app
