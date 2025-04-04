@@ -43,30 +43,10 @@ spec:
           value: "k8s"
         - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
           value: "http://discovery-server:8761/eureka"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[0]_ID
-          value: "product-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[0]_URI
-          value: "lb://product-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[0]_PREDICATES[0]
-          value: "Path=/api/products/**"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[1]_ID
-          value: "order-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[1]_URI
-          value: "lb://order-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[1]_PREDICATES[0]
-          value: "Path=/api/orders/**"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[2]_ID
-          value: "inventory-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[2]_URI
-          value: "lb://inventory-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[2]_PREDICATES[0]
-          value: "Path=/api/inventory/**"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[3]_ID
-          value: "notification-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[3]_URI
-          value: "lb://notification-service"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES[3]_PREDICATES[0]
-          value: "Path=/api/notifications/**"
+        # Using a ConfigMap for routes instead of environment variables
+        volumeMounts:
+        - name: gateway-config
+          mountPath: /config
         resources:
           requests:
             memory: "512Mi"
@@ -74,6 +54,39 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
+      volumes:
+      - name: gateway-config
+        configMap:
+          name: api-gateway-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: microservices-app
+data:
+  application.yml: |
+    spring:
+      cloud:
+        gateway:
+          routes:
+            - id: product-service
+              uri: lb://product-service
+              predicates:
+                - Path=/api/products/**
+            - id: order-service
+              uri: lb://order-service
+              predicates:
+                - Path=/api/orders/**
+            - id: inventory-service
+              uri: lb://inventory-service
+              predicates:
+                - Path=/api/inventory/**
+            - id: notification-service
+              uri: lb://notification-service
+              predicates:
+                - Path=/api/notifications/**
+
 ---
 apiVersion: v1
 kind: Service
