@@ -4,34 +4,49 @@ steps:
   args: ['clean', 'package', '-DskipTests']
   dir: '.'
 
-# Build and push images for each microservice
-- name: 'gcr.io/cloud-builders/mvn'
-  args: ['jib:build', '-Djib.to.image=us-central1-docker.pkg.dev/$PROJECT_ID/microservices/product-service:$COMMIT_SHA']
-  dir: 'product-service'
+# Build and push Docker images
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/product-service:$COMMIT_SHA', './product-service']
 
-- name: 'gcr.io/cloud-builders/mvn'
-  args: ['jib:build', '-Djib.to.image=us-central1-docker.pkg.dev/$PROJECT_ID/microservices/order-service:$COMMIT_SHA']
-  dir: 'order-service'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/order-service:$COMMIT_SHA', './order-service']
 
-- name: 'gcr.io/cloud-builders/mvn'
-  args: ['jib:build', '-Djib.to.image=us-central1-docker.pkg.dev/$PROJECT_ID/microservices/inventory-service:$COMMIT_SHA']
-  dir: 'inventory-service'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/inventory-service:$COMMIT_SHA', './inventory-service']
 
-- name: 'gcr.io/cloud-builders/mvn'
-  args: ['jib:build', '-Djib.to.image=us-central1-docker.pkg.dev/$PROJECT_ID/microservices/notification-service:$COMMIT_SHA']
-  dir: 'notification-service'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/notification-service:$COMMIT_SHA', './notification-service']
 
-- name: 'gcr.io/cloud-builders/mvn'
-  args: ['jib:build', '-Djib.to.image=us-central1-docker.pkg.dev/$PROJECT_ID/microservices/discovery-server:$COMMIT_SHA']
-  dir: 'discovery-server'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/discovery-server:$COMMIT_SHA', './discovery-server']
 
-- name: 'gcr.io/cloud-builders/mvn'
-  args: ['jib:build', '-Djib.to.image=us-central1-docker.pkg.dev/$PROJECT_ID/microservices/api-gateway:$COMMIT_SHA']
-  dir: 'api-gateway'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/api-gateway:$COMMIT_SHA', './api-gateway']
 
-- name: 'gcr.io/cloud-builders/mvn'
-  args: ['jib:build', '-Djib.to.image=us-central1-docker.pkg.dev/$PROJECT_ID/microservices/admin-server:$COMMIT_SHA']
-  dir: 'admin-server'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/admin-server:$COMMIT_SHA', './admin-server']
+
+# Push images to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/product-service:$COMMIT_SHA']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/order-service:$COMMIT_SHA']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/inventory-service:$COMMIT_SHA']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/notification-service:$COMMIT_SHA']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/discovery-server:$COMMIT_SHA']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/api-gateway:$COMMIT_SHA']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/admin-server:$COMMIT_SHA']
 
 # Create namespace if it doesn't exist
 - name: 'gcr.io/cloud-builders/kubectl'
