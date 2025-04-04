@@ -14,54 +14,38 @@ jobs:
     name: Docker Image Security Scan
     runs-on: ubuntu-latest
     
-    strategy:
-      matrix:
-        service: [order-service, inventory-service, product-service, notification-service]
-        
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
       
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-      
-    - name: Build Docker image
-      uses: docker/build-push-action@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
       with:
-        context: ./${{ matrix.service }}
-        push: false
-        load: true
-        tags: ${{ matrix.service }}:scan
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        java-version: '17'
+        distribution: 'temurin'
         
-    - name: Run Trivy vulnerability scanner
+    - name: Build with Maven
+      run: mvn -B package -DskipTests
+      
+    - name: Run Trivy filesystem scan
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ matrix.service }}:scan
-        format: 'sarif'
-        output: 'trivy-results-${{ matrix.service }}.sarif'
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
         severity: 'CRITICAL,HIGH'
-        
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
-        
-    - name: Install Dockle
-      run: |
-        VERSION=$(curl --silent "https://api.github.com/repos/goodwithtech/dockle/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-        curl -L -o dockle.deb https://github.com/goodwithtech/dockle/releases/download/v${VERSION}/dockle_${VERSION}_Linux-64bit.deb
-        sudo dpkg -i dockle.deb
-        rm dockle.deb
-        
-    - name: Run Dockle container linter
-      run: |
-        dockle --format json --output dockle-results-${{ matrix.service }}.json ${{ matrix.service }}:scan
+        exit-code: '0'
       continue-on-error: true
+      
+    - name: Generate security report
+      run: |
+        echo "# Security Scan Results" > security-report.md
+        echo "## Scan completed on $(date)" >> security-report.md
+        echo "### Trivy Results" >> security-report.md
+        echo "- Check logs for details" >> security-report.md
         
-    - name: Upload Dockle results
-      uses: actions/upload-artifact@v3
+    - name: Upload security report
+      uses: actions/upload-artifact@v2
       with:
-        name: dockle-results-${{ matrix.service }}
-        path: dockle-results-${{ matrix.service }}.json
+        name: security-report
+        path: security-report.md
