@@ -4,7 +4,9 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'k8s/optimized-*.yaml'
+      - 'k8s/*.yaml'
+      - 'k8s/monitoring/*.yaml'
+      - 'k8s/logging/*.yaml'
   workflow_dispatch:
 
 env:
@@ -42,11 +44,31 @@ jobs:
     - name: Create namespace if not exists
       run: kubectl create namespace microservices-app --dry-run=client -o yaml | kubectl apply -f -
       
+    - name: Clean up existing deployments
+      run: |
+        kubectl delete deployment --all -n microservices-app || true
+        kubectl delete statefulset --all -n microservices-app || true
+        sleep 30
+        
     - name: Deploy infrastructure components
-      run: kubectl apply -f k8s/optimized-infrastructure.yaml
-      
-    - name: Deploy microservices and monitoring
-      run: kubectl apply -f k8s/optimized-resources.yaml
+      run: |
+        kubectl apply -f k8s/infrastructure.yaml
+        sleep 30
+        
+    - name: Deploy API Gateway
+      run: kubectl apply -f k8s/api-gateway.yaml
+        
+    - name: Deploy monitoring components
+      run: |
+        kubectl apply -f k8s/monitoring/prometheus-config.yaml
+        kubectl apply -f k8s/monitoring/prometheus-deployment.yaml
+        kubectl apply -f k8s/monitoring/grafana-deployment.yaml
+        
+    - name: Deploy logging components
+      run: |
+        kubectl apply -f k8s/logging/elasticsearch-deployment.yaml
+        kubectl apply -f k8s/logging/kibana-deployment.yaml
+        kubectl apply -f k8s/logging/logstash-deployment.yaml
       
     - name: Wait for deployments
       run: |
