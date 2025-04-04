@@ -34,6 +34,23 @@ jobs:
       run: |
         gcloud --quiet auth configure-docker us-central1-docker.pkg.dev
         
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Build and Push Discovery Server Image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./discovery-server
+        push: true
+        tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/discovery-server:latest
+        
+    - name: Build and Push API Gateway Image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./api-gateway
+        push: true
+        tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/api-gateway:latest
+        
     - name: Get GKE credentials
       uses: google-github-actions/get-gke-credentials@v1
       with:

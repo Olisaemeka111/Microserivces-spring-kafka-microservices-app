@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: nginx:latest
+        image: us-central1-docker.pkg.dev/${PROJECT_ID}/microservices/api-gateway:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
