@@ -14,10 +14,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -37,7 +37,7 @@ jobs:
         echo "- Package built successfully" >> build-report.md
         
     - name: Upload build report
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: build-report
         path: build-report.md
@@ -51,53 +51,7 @@ jobs:
         cp notification-service/target/*.jar artifacts/notification-service.jar || true
         
     - name: Upload JAR artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: service-jars
         path: artifacts
-                    port:
-                      number: 80
-              - path: /api/inventory
-                pathType: Prefix
-                backend:
-                  service:
-                    name: inventory-service
-                    port:
-                      number: 80
-              - path: /api/product
-                pathType: Prefix
-                backend:
-                  service:
-                    name: product-service
-                    port:
-                      number: 80
-              - path: /api/notification
-                pathType: Prefix
-                backend:
-                  service:
-                    name: notification-service
-                    port:
-                      number: 80
-        EOF
-    
-    - name: Deploy to GKE
-      run: |
-        # Apply Kubernetes manifests
-        kubectl apply -f k8s-manifests/
-        
-        # Wait for deployments to be ready (with longer timeout for Autopilot)
-        kubectl rollout status deployment/order-service --timeout=5m
-        kubectl rollout status deployment/inventory-service --timeout=5m
-        kubectl rollout status deployment/product-service --timeout=5m
-        kubectl rollout status deployment/notification-service --timeout=5m
-        
-        # Get the Ingress IP (this may take several minutes in Autopilot)
-        echo "Waiting for Ingress to get an external IP..."
-        echo "Note: This may take 5-10 minutes in GKE Autopilot"
-        
-        # Print service and ingress information
-        kubectl get services
-        kubectl get ingress microservices-ingress
-        
-        # Get the actual ingress IP when available
-        kubectl get ingress microservices-ingress --output jsonpath='{.status.loadBalancer.ingress[0].ip}'
