@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: discovery-server
-        image: gcr.io/${PROJECT_ID}/discovery-server:${COMMIT_SHA}
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/discovery-server:latest
         ports:
         - containerPort: 8761
         env:
@@ -23,11 +23,11 @@ spec:
           value: "k8s"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
 ---
 apiVersion: v1
 kind: Service

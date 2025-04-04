@@ -55,6 +55,12 @@ jobs:
         kubectl apply -f k8s/infrastructure.yaml
         sleep 30
         
+    - name: Deploy Discovery Server (Eureka)
+      run: |
+        kubectl apply -f k8s/discovery-server.yaml
+        sleep 60  # Wait for discovery server to be ready
+        kubectl get pods -n microservices-app -l app=discovery-server
+        
     - name: Deploy API Gateway
       run: kubectl apply -f k8s/api-gateway.yaml
         
