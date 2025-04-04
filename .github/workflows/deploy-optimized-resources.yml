@@ -40,14 +40,16 @@ jobs:
     - name: Build and Push Discovery Server Image
       uses: docker/build-push-action@v4
       with:
-        context: ./discovery-server
+        context: .
+        file: ./discovery-server/Dockerfile
         push: true
         tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/discovery-server:latest
         
     - name: Build and Push API Gateway Image
       uses: docker/build-push-action@v4
       with:
-        context: ./api-gateway
+        context: .
+        file: ./api-gateway/Dockerfile
         push: true
         tags: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/microservices/api-gateway:latest
         
