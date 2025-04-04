@@ -7,13 +7,13 @@ WORKDIR /app
 COPY pom.xml /app/
 
 # Copy the module
-COPY api-gateway /app/api-gateway/
+COPY . /app/api-gateway/
 
 # Build from the root directory
 RUN mvn -B -f api-gateway/pom.xml clean package -DskipTests
 
 FROM eclipse-temurin:17.0.4.1_1-jre
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/api-gateway/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
