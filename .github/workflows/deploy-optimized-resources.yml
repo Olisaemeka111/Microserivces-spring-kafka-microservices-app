@@ -21,10 +21,15 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       
-    - name: Setup Google Cloud CLI
+    - name: Google Auth
+      id: auth
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GKE_SA_KEY }}
+
+    - name: Setup Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
-        service_account_key: ${{ secrets.GKE_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
         
     - name: Get GKE credentials
@@ -32,6 +37,7 @@ jobs:
       with:
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
+        project_id: ${{ env.PROJECT_ID }}
         
     - name: Create namespace if not exists
       run: kubectl create namespace microservices-app --dry-run=client -o yaml | kubectl apply -f -
