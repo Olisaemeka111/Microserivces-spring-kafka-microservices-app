@@ -37,7 +37,7 @@ jobs:
         echo "- Package built successfully" >> build-report.md
         
     - name: Upload build report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2.3.1
       with:
         name: build-report
         path: build-report.md
@@ -51,7 +51,7 @@ jobs:
         cp notification-service/target/*.jar artifacts/notification-service.jar || true
         
     - name: Upload JAR artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2.3.1
       with:
         name: service-jars
         path: artifacts
