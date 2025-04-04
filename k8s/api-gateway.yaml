@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: springcloud/spring-cloud-gateway
+        image: ghcr.io/spring-cloud-samples/spring-cloud-gateway-sample:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

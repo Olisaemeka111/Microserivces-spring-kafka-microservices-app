@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: discovery-server
-        image: springcloud/eureka
+        image: springcloud/eureka-server:latest
         ports:
         - containerPort: 8761
         env:
