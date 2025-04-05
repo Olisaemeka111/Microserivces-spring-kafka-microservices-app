@@ -1,0 +1,46 @@
+# GKE Autopilot Terraform Deployment Commands
+# Run these commands in Google Cloud Shell
+
+# 0. Clone the repository if you're starting fresh
+git clone https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app.git
+cd Microserivces-spring-kafka-microservices-app/terraform
+
+# 1. Make sure all required files are present
+ls -la
+# Should show: main.tf, variables.tf, outputs.tf, provider.tf, versions.tf, terraform.tfvars
+
+# 2. Initialize Terraform
+terraform init
+
+# 3. Verify project and credentials
+gcloud config list project
+# If needed, set project: gcloud config set project YOUR_PROJECT_ID
+
+# 4. Plan the infrastructure changes
+terraform plan -out=tfplan
+
+# 5. Review the plan
+# The output will show what resources will be created
+
+# 6. Apply the Terraform plan
+terraform apply tfplan
+
+# 7. Wait for the cluster to be created (may take 10-15 minutes)
+# You'll see progress updates in the console
+
+# 8. Once complete, configure kubectl to use the new cluster
+# The command will be provided in the Terraform output
+# Example: gcloud container clusters get-credentials spring-kafka-cluster --region us-central1 --project spring-kafka-microservices
+
+# 9. Deploy microservices after cluster is ready
+kubectl apply -f ../k8s/namespace.yaml
+kubectl apply -f ../k8s/optimized-infrastructure-reduced.yaml
+kubectl apply -f ../k8s/discovery-server.yaml
+kubectl apply -f ../k8s/optimized-resources-reduced.yaml
+
+# 10. Check deployment status
+kubectl get pods -n microservices-app
+
+# Additional commands:
+# To destroy the cluster when finished:
+# terraform destroy

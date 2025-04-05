@@ -23,15 +23,15 @@ resource "google_compute_subnetwork" "subnet" {
   }
 }
 
-# Create GKE Autopilot cluster
+# Create GKE Autopilot cluster optimized for microservices with lower resource requirements
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
   location = var.region
   
-  # Enable Autopilot mode
+  # Enable Autopilot mode for simplified management
   enable_autopilot = true
   
-  # Set to regional cluster for higher availability
+  # Use all three zones for increased capacity and high availability
   node_locations = [
     "${var.region}-a",
     "${var.region}-b",
@@ -47,9 +47,9 @@ resource "google_container_cluster" "primary" {
     services_secondary_range_name = "services"
   }
   
-  # Autopilot clusters require release channel
+  # Use STABLE channel for better reliability with resource-constrained workloads
   release_channel {
-    channel = "REGULAR"
+    channel = "STABLE"
   }
   
   # Workload Identity for better security
@@ -57,9 +57,36 @@ resource "google_container_cluster" "primary" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
   
-  # Medium resource settings (Note: Autopilot automatically scales nodes based on workload requirements)
+  # Enable vertical pod autoscaling for efficient resource allocation
   vertical_pod_autoscaling {
     enabled = true
+  }
+  
+  # Add resource optimization settings with increased capacity
+  cluster_autoscaling {
+    auto_provisioning_defaults {
+      # Set higher resource limits for auto-provisioned node pools
+      min_cpu_platform = "Intel Skylake"
+      
+      # Set management settings for optimized operations
+      management {
+        auto_repair  = true
+        auto_upgrade = true
+      }
+    }
+    
+    # Set resource limits for the cluster
+    resource_limits {
+      resource_type = "cpu"
+      minimum       = 4
+      maximum       = 16
+    }
+    
+    resource_limits {
+      resource_type = "memory"
+      minimum       = 16
+      maximum       = 64
+    }
   }
   
   # Network security

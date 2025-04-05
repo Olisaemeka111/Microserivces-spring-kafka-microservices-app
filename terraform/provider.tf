@@ -3,6 +3,16 @@ provider "google" {
   region  = var.region
 }
 
+# Configure the Kubernetes Provider to manage resources within the GKE cluster
+provider "kubernetes" {
+  host                   = "https://${google_container_cluster.primary.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
+}
+
+# Get Google client configuration for authentication
+data "google_client_config" "default" {}
+
 provider "google-beta" {
   project = var.project_id
   region  = var.region
