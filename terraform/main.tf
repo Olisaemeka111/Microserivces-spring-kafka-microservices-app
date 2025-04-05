@@ -122,4 +122,27 @@ resource "google_compute_router_nat" "nat" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+# Create Artifact Registry repository for Docker images
+resource "google_artifact_registry_repository" "docker_repo" {
+  provider      = google
+  location      = var.region
+  repository_id = "spring-kafka-microservices"
+  description   = "Docker repository for Spring Kafka Microservices"
+  format        = "DOCKER"
+}
+
+# Grant the GitHub Actions service account permission to push to Artifact Registry
+resource "google_artifact_registry_repository_iam_member" "github_actions_writer" {
+  provider   = google
+  location   = google_artifact_registry_repository.docker_repo.location
+  repository = google_artifact_registry_repository.docker_repo.name
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.github_actions.email}"
+  
+  depends_on = [
+    google_service_account.github_actions,
+    google_artifact_registry_repository.docker_repo
+  ]
 } 

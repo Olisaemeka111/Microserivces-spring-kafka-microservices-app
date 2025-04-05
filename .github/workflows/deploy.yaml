@@ -15,7 +15,7 @@ env:
   GKE_CLUSTER: spring-kafka-cluster
   GKE_REGION: us-central1
   REGISTRY: us-central1-docker.pkg.dev
-  REPOSITORY: spring-kafka-microservices/microservices
+  REPOSITORY: spring-kafka-microservices/spring-kafka-microservices
   GITHUB_SHA: ${{ github.sha }}
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
       run: |
         echo "Checking service account permissions..."
         gcloud projects get-iam-policy ${{ env.PROJECT_ID }} --format=json | grep -A 10 $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
-        gcloud artifacts repositories describe microservices --location=${{ env.GKE_REGION }} || echo "Repository not found"
+        gcloud artifacts repositories describe spring-kafka-microservices --location=${{ env.GKE_REGION }} || echo "Repository not found"
     
     - name: Build with Maven
       run: mvn -B package --file pom.xml -DskipTests
