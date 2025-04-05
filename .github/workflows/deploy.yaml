@@ -64,21 +64,47 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml -DskipTests
     
-    # Build and push API Gateway - using direct Docker commands
+    # Build and push API Gateway
     - name: Build and Push API Gateway
       run: |
         docker build -t $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/api-gateway:latest ./api-gateway
         docker push $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/api-gateway:latest
     
-    # Build and push Discovery Server - using direct Docker commands
+    # Build and push Discovery Server
     - name: Build and Push Discovery Server
       run: |
         docker build -t $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/discovery-server:latest ./discovery-server
         docker push $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/discovery-server:latest
     
-    # Add additional build steps for other microservices here
+    # Build and push Product Service
+    - name: Build and Push Product Service
+      run: |
+        docker build -t $REGISTRY/$REPOSITORY/product-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/product-service:latest ./product-service
+        docker push $REGISTRY/$REPOSITORY/product-service:$GITHUB_SHA
+        docker push $REGISTRY/$REPOSITORY/product-service:latest
+    
+    # Build and push Order Service
+    - name: Build and Push Order Service
+      run: |
+        docker build -t $REGISTRY/$REPOSITORY/order-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/order-service:latest ./order-service
+        docker push $REGISTRY/$REPOSITORY/order-service:$GITHUB_SHA
+        docker push $REGISTRY/$REPOSITORY/order-service:latest
+    
+    # Build and push Inventory Service
+    - name: Build and Push Inventory Service
+      run: |
+        docker build -t $REGISTRY/$REPOSITORY/inventory-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/inventory-service:latest ./inventory-service
+        docker push $REGISTRY/$REPOSITORY/inventory-service:$GITHUB_SHA
+        docker push $REGISTRY/$REPOSITORY/inventory-service:latest
+    
+    # Build and push Notification Service
+    - name: Build and Push Notification Service
+      run: |
+        docker build -t $REGISTRY/$REPOSITORY/notification-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/notification-service:latest ./notification-service
+        docker push $REGISTRY/$REPOSITORY/notification-service:$GITHUB_SHA
+        docker push $REGISTRY/$REPOSITORY/notification-service:latest
     
     # Debug environment variables
     - name: Debug Environment Variables
@@ -101,13 +127,16 @@ jobs:
       run: |
         kubectl apply -f k8s/namespace.yaml
         
-        # Apply manifests but exclude the workflow file
+        # Apply manifests but exclude any workflow files
         for file in k8s/*.yaml; do
-          if [[ "$file" != "k8s/monitoring-logging-workflow.yaml" ]]; then
+          if [[ ! "$file" =~ "workflow" ]]; then
             kubectl apply -f $file
           fi
         done
         
         kubectl rollout status deployment/api-gateway -n microservices-app
         kubectl rollout status deployment/discovery-server -n microservices-app
-        # Add additional rollout status checks for other microservices here 
+        kubectl rollout status deployment/product-service -n microservices-app
+        kubectl rollout status deployment/order-service -n microservices-app
+        kubectl rollout status deployment/inventory-service -n microservices-app
+        kubectl rollout status deployment/notification-service -n microservices-app 

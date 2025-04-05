@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:42f2df3
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/api-gateway:IMAGE_TAG
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
