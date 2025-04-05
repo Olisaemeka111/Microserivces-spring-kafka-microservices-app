@@ -1,6 +1,6 @@
 name: Build and Deploy to GKE
 
-# This workflow builds and deploys the spring-kafka-microservices app to GKE using service account authentication
+# This workflow builds and deploys the spring-kafka-microservices app to GKE using Workload Identity Federation
 # Last updated: April 5, 2024
 
 on:
@@ -42,8 +42,13 @@ jobs:
       id: auth
       uses: google-github-actions/auth@v1
       with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.SERVICE_ACCOUNT }}'
         project_id: ${{ env.PROJECT_ID }}
+        token_format: 'access_token'
+        access_token_lifetime: '3600s'
+        create_credentials_file: true
+        export_environment_variables: true
     
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
