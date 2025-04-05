@@ -32,12 +32,12 @@ jobs:
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
 
-    # Get the GKE credentials
-    - name: Get GKE credentials
-      uses: google-github-actions/get-gke-credentials@v1
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_ZONE }}
+    # Get the GKE credentials using direct gcloud command instead of action
+    - name: Connect to GKE Cluster
+      run: |
+        echo "Connecting to GKE cluster ${{ env.GKE_CLUSTER }} in zone ${{ env.GKE_ZONE }}..."
+        gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" --zone "${{ env.GKE_ZONE }}" --project "${{ env.PROJECT_ID }}"
+        kubectl get namespace
 
     # Deploy Prometheus and Grafana for monitoring
     - name: Deploy Prometheus

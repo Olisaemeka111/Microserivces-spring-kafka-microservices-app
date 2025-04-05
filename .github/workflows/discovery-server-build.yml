@@ -67,12 +67,12 @@ jobs:
         build-args: |
           JAR_FILE=discovery-server/target/*.jar
 
-    # Get the GKE credentials
-    - name: Get GKE credentials
-      uses: google-github-actions/get-gke-credentials@v1
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_ZONE }}
+    # Connect to GKE using direct gcloud command
+    - name: Connect to GKE Cluster
+      run: |
+        echo "Connecting to GKE cluster ${{ env.GKE_CLUSTER }} in zone ${{ env.GKE_ZONE }}..."
+        gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" --zone "${{ env.GKE_ZONE }}" --project "${{ env.PROJECT_ID }}"
+        kubectl get namespace
 
     # Update discovery-server Kubernetes manifest
     - name: Update Discovery Server Manifest
