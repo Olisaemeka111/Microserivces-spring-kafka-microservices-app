@@ -42,18 +42,8 @@ jobs:
       id: auth
       uses: google-github-actions/auth@v1
       with:
-        workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
-        service_account: '${{ secrets.SERVICE_ACCOUNT }}'
-        project_id: spring-kafka-microservices
-        token_format: 'access_token'
-        access_token_lifetime: '3600s'
-        create_credentials_file: true
-        export_environment_variables: true
-        cleanup_credentials: true
-        access_token_scopes: 'https://www.googleapis.com/auth/cloud-platform'
-        retries: 3
-        backoff: 250
-        id_token_include_email: false
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        project_id: ${{ env.PROJECT_ID }}
     
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
