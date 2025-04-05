@@ -23,10 +23,11 @@ This repository contains a spring boot microservices application implemented usi
 
 - Spring Boot 3.1.3+
 - JDK 17+ (baseline for spring boot 3.0+)
-- Spring Security (version 6.0+)
+- Spring Security (version 6.0+) with OAuth2 Resource Server
 - Spring Discovery (based on the latest cloud version)
-- Spring API Gateway
-- Distributed tracing with zipkin and sleuth (all deprecated but replaces with micrometer tracing)
+- Spring API Gateway with Circuit Breaker
+- Resilience4j for Circuit Breaking and Rate Limiting
+- Distributed tracing with Micrometer
 - Spring Kafka and Kafka streams for messaging
 
 ### Databases
@@ -34,10 +35,20 @@ This repository contains a spring boot microservices application implemented usi
 - MongoDB
 - MySQL and PostgreSQL
 
-### Other Tech Stack
+### Resilience Patterns
 
-- Authorization via Spring OAuth2 resource server (using keycloak)
-- Keycloack provides the authorization via OAuth2 & OIDC
+- Circuit Breaker implementation using Resilience4j
+- Configurable timeout durations (default: 5 seconds)
+- Retry mechanisms for failed requests
+- Fallback methods for graceful degradation
+
+### Security
+
+- OAuth2 Resource Server implementation
+- JWT-based authentication
+- Keycloak integration for authorization
+- CSRF protection
+- Secured endpoints with fine-grained permissions
 
 ### Others include
 
