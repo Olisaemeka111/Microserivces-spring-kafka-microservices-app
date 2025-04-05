@@ -4,7 +4,7 @@ A robust microservices architecture using Spring Boot, Kafka, and deployed on Go
 
 ## CI/CD Pipeline Status
 This project uses GitHub Actions for continuous integration and deployment to Google Kubernetes Engine. 
-Last updated: April 5, 2024 - GCP Service Account authentication configured with Artifact Registry permissions fixed.
+Last updated: April 5, 2024 - GCP Service Account authentication configured with Artifact Registry permissions and hardcoded region.
 
 [![Build and Deploy to GKE](https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app/actions/workflows/gcp-deploy.yml/badge.svg)](https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app/actions/workflows/gcp-deploy.yml)
 
