@@ -22,6 +22,13 @@ resource "google_project_iam_member" "gke_developer" {
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+# Grant the service account permissions to use Artifact Registry
+resource "google_project_iam_member" "artifact_registry_admin" {
+  project = var.project_id
+  role    = "roles/artifactregistry.admin"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # Get project information
 data "google_project" "project" {
   project_id = var.project_id

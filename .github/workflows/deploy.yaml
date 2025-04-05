@@ -55,11 +55,10 @@ jobs:
       run: |
         gcloud auth configure-docker $REGISTRY --quiet
     
-    # Debugging step to verify service account permissions
-    - name: Check Service Account Permissions
+    # Check repository exists without needing IAM policy permissions
+    - name: Check Artifact Registry
       run: |
-        echo "Checking service account permissions..."
-        gcloud projects get-iam-policy ${{ env.PROJECT_ID }} --format=json | grep -A 10 $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+        echo "Checking Artifact Registry repository..."
         gcloud artifacts repositories describe spring-kafka-microservices --location=${{ env.GKE_REGION }} || echo "Repository not found"
     
     - name: Build with Maven
@@ -81,11 +80,18 @@ jobs:
     
     # Add additional build steps for other microservices here
     
+    # Debug environment variables
+    - name: Debug Environment Variables
+      run: |
+        echo "PROJECT_ID: ${{ env.PROJECT_ID }}"
+        echo "GKE_CLUSTER: ${{ env.GKE_CLUSTER }}"
+        echo "GKE_REGION: ${{ env.GKE_REGION }}"
+    
     - name: Get GKE Credentials
       uses: google-github-actions/get-gke-credentials@v1
       with:
         cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_REGION }}
+        location: us-central1
         project_id: ${{ env.PROJECT_ID }}
     
     - name: Update Kubernetes manifests
