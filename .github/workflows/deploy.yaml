@@ -87,21 +87,27 @@ jobs:
         echo "GKE_CLUSTER: ${{ env.GKE_CLUSTER }}"
         echo "GKE_REGION: ${{ env.GKE_REGION }}"
     
-    - name: Get GKE Credentials
-      uses: google-github-actions/get-gke-credentials@v1
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: us-central1
-        project_id: ${{ env.PROJECT_ID }}
+    # Connect to GKE using direct gcloud command instead of the action
+    - name: Connect to GKE Cluster
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region=${{ env.GKE_REGION }} --project=${{ env.PROJECT_ID }}
     
     - name: Update Kubernetes manifests
       run: |
         sed -i "s|IMAGE_TAG|$GITHUB_SHA|g" k8s/*.yaml
-        
+    
+    # Apply Kubernetes manifests excluding workflow files
     - name: Deploy to GKE
       run: |
         kubectl apply -f k8s/namespace.yaml
-        kubectl apply -f k8s/
+        
+        # Apply manifests but exclude the workflow file
+        for file in k8s/*.yaml; do
+          if [[ "$file" != "k8s/monitoring-logging-workflow.yaml" ]]; then
+            kubectl apply -f $file
+          fi
+        done
+        
         kubectl rollout status deployment/api-gateway -n microservices-app
         kubectl rollout status deployment/discovery-server -n microservices-app
         # Add additional rollout status checks for other microservices here 
