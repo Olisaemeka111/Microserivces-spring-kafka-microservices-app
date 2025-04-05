@@ -43,17 +43,24 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
-        project_id: spring-kafka-microservices
+        project_id: ${{ env.PROJECT_ID }}
     
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
-        project_id: spring-kafka-microservices
+        project_id: ${{ env.PROJECT_ID }}
         install_components: 'gke-gcloud-auth-plugin'
     
     - name: Configure Docker
       run: |
         gcloud auth configure-docker $REGISTRY --quiet
+    
+    # Debugging step to verify service account permissions
+    - name: Check Service Account Permissions
+      run: |
+        echo "Checking service account permissions..."
+        gcloud projects get-iam-policy ${{ env.PROJECT_ID }} --format=json | grep -A 10 $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+        gcloud artifacts repositories describe microservices --location=${{ env.GKE_REGION }} || echo "Repository not found"
     
     - name: Build with Maven
       run: mvn -B package --file pom.xml -DskipTests
