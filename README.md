@@ -3,7 +3,8 @@
 A robust microservices architecture using Spring Boot, Kafka, and deployed on Google Kubernetes Engine (GKE).
 
 ## CI/CD Pipeline Status
-This project uses GitHub Actions for continuous integration and deployment to Google Kubernetes Engine (GKE).
+This project uses GitHub Actions for continuous integration and deployment to Google Kubernetes Engine. 
+Last updated: April 5, 2024 - GCP Service Account authentication configured.
 
 [![Build and Deploy to GKE](https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app/actions/workflows/gcp-deploy.yml/badge.svg)](https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app/actions/workflows/gcp-deploy.yml)
 
@@ -12,7 +13,7 @@ This project uses GitHub Actions for continuous integration and deployment to Go
 - Message-based communication using Apache Kafka
 - Containerized deployment with Docker
 - Orchestration with Kubernetes on GKE
-- CI/CD with GitHub Actions and Workload Identity Federation
+- CI/CD with GitHub Actions
 
 ### Contents
 
