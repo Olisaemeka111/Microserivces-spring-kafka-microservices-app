@@ -62,55 +62,125 @@ jobs:
         gcloud artifacts repositories describe spring-kafka-microservices --location=${{ env.GKE_REGION }} || echo "Repository not found"
     
     - name: Build with Maven
-      run: mvn -B package --file pom.xml -DskipTests
+      run: |
+        echo "Building with Maven..."
+        mvn -B package --file pom.xml -DskipTests
+        echo "Maven build completed. Listing JAR files:"
+        find . -name "*.jar" | grep "/target/"
     
     # Build and push API Gateway
     - name: Build and Push API Gateway
       run: |
         echo "Building API Gateway Docker image..."
-        docker build -t $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/api-gateway:latest -f ./api-gateway/Dockerfile --build-arg JAR_FILE=api-gateway/target/*.jar .
-        docker push $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA
-        docker push $REGISTRY/$REPOSITORY/api-gateway:latest
+        # First copy the JAR file to a simpler location
+        mkdir -p ./tmp
+        cp ./api-gateway/target/*.jar ./tmp/api-gateway.jar
+        
+        # Build using the copied JAR
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:${{ env.GITHUB_SHA }} \
+                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:latest \
+                     -f ./api-gateway/Dockerfile \
+                     --build-arg JAR_FILE=./tmp/api-gateway.jar \
+                     .
+        
+        # Push the images
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:${{ env.GITHUB_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:latest
     
     # Build and push Discovery Server
     - name: Build and Push Discovery Server
       run: |
         echo "Building Discovery Server Docker image..."
-        docker build -t $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/discovery-server:latest -f ./discovery-server/Dockerfile --build-arg JAR_FILE=discovery-server/target/*.jar .
-        docker push $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA
-        docker push $REGISTRY/$REPOSITORY/discovery-server:latest
+        # First copy the JAR file to a simpler location
+        mkdir -p ./tmp
+        cp ./discovery-server/target/*.jar ./tmp/discovery-server.jar
+        
+        # Build using the copied JAR
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ env.GITHUB_SHA }} \
+                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest \
+                     -f ./discovery-server/Dockerfile \
+                     --build-arg JAR_FILE=./tmp/discovery-server.jar \
+                     .
+        
+        # Push the images
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ env.GITHUB_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest
     
     # Build and push Product Service
     - name: Build and Push Product Service
       run: |
         echo "Building Product Service Docker image..."
-        docker build -t $REGISTRY/$REPOSITORY/product-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/product-service:latest -f ./product-service/Dockerfile --build-arg JAR_FILE=product-service/target/*.jar .
-        docker push $REGISTRY/$REPOSITORY/product-service:$GITHUB_SHA
-        docker push $REGISTRY/$REPOSITORY/product-service:latest
+        # First copy the JAR file to a simpler location
+        mkdir -p ./tmp
+        cp ./product-service/target/*.jar ./tmp/product-service.jar
+        
+        # Build using the copied JAR
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:${{ env.GITHUB_SHA }} \
+                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:latest \
+                     -f ./product-service/Dockerfile \
+                     --build-arg JAR_FILE=./tmp/product-service.jar \
+                     .
+        
+        # Push the images
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:${{ env.GITHUB_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:latest
     
     # Build and push Order Service
     - name: Build and Push Order Service
       run: |
         echo "Building Order Service Docker image..."
-        docker build -t $REGISTRY/$REPOSITORY/order-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/order-service:latest -f ./order-service/Dockerfile --build-arg JAR_FILE=order-service/target/*.jar .
-        docker push $REGISTRY/$REPOSITORY/order-service:$GITHUB_SHA
-        docker push $REGISTRY/$REPOSITORY/order-service:latest
+        # First copy the JAR file to a simpler location
+        mkdir -p ./tmp
+        cp ./order-service/target/*.jar ./tmp/order-service.jar
+        
+        # Build using the copied JAR
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:${{ env.GITHUB_SHA }} \
+                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:latest \
+                     -f ./order-service/Dockerfile \
+                     --build-arg JAR_FILE=./tmp/order-service.jar \
+                     .
+        
+        # Push the images
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:${{ env.GITHUB_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:latest
     
     # Build and push Inventory Service
     - name: Build and Push Inventory Service
       run: |
         echo "Building Inventory Service Docker image..."
-        docker build -t $REGISTRY/$REPOSITORY/inventory-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/inventory-service:latest -f ./inventory-service/Dockerfile --build-arg JAR_FILE=inventory-service/target/*.jar .
-        docker push $REGISTRY/$REPOSITORY/inventory-service:$GITHUB_SHA
-        docker push $REGISTRY/$REPOSITORY/inventory-service:latest
+        # First copy the JAR file to a simpler location
+        mkdir -p ./tmp
+        cp ./inventory-service/target/*.jar ./tmp/inventory-service.jar
+        
+        # Build using the copied JAR
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:${{ env.GITHUB_SHA }} \
+                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:latest \
+                     -f ./inventory-service/Dockerfile \
+                     --build-arg JAR_FILE=./tmp/inventory-service.jar \
+                     .
+        
+        # Push the images
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:${{ env.GITHUB_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:latest
     
     # Build and push Notification Service
     - name: Build and Push Notification Service
       run: |
         echo "Building Notification Service Docker image..."
-        docker build -t $REGISTRY/$REPOSITORY/notification-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/notification-service:latest -f ./notification-service/Dockerfile --build-arg JAR_FILE=notification-service/target/*.jar .
-        docker push $REGISTRY/$REPOSITORY/notification-service:$GITHUB_SHA
-        docker push $REGISTRY/$REPOSITORY/notification-service:latest
+        # First copy the JAR file to a simpler location
+        mkdir -p ./tmp
+        cp ./notification-service/target/*.jar ./tmp/notification-service.jar
+        
+        # Build using the copied JAR
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:${{ env.GITHUB_SHA }} \
+                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:latest \
+                     -f ./notification-service/Dockerfile \
+                     --build-arg JAR_FILE=./tmp/notification-service.jar \
+                     .
+        
+        # Push the images
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:${{ env.GITHUB_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:latest
     
     # Debug environment variables
     - name: Debug Environment Variables
@@ -125,13 +195,14 @@ jobs:
     # Connect to GKE using direct gcloud command instead of the action
     - name: Connect to GKE Cluster
       run: |
-        echo "Connecting to GKE cluster $GKE_CLUSTER in region $GKE_REGION..."
-        gcloud container clusters get-credentials $GKE_CLUSTER --region=$GKE_REGION --project=$PROJECT_ID
+        echo "Connecting to GKE cluster ${{ env.GKE_CLUSTER }} in region ${{ env.GKE_REGION }}..."
+        gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" --region "${{ env.GKE_REGION }}" --project "${{ env.PROJECT_ID }}"
+        kubectl get namespace
     
     - name: Update Kubernetes manifests
       run: |
-        echo "Updating Kubernetes manifests with image tag: $GITHUB_SHA"
-        sed -i "s|IMAGE_TAG|$GITHUB_SHA|g" k8s/*.yaml
+        echo "Updating Kubernetes manifests with image tag: ${{ env.GITHUB_SHA }}"
+        sed -i "s|IMAGE_TAG|${{ env.GITHUB_SHA }}|g" k8s/*.yaml
     
     # Apply Kubernetes manifests excluding workflow files
     - name: Deploy to GKE
@@ -143,7 +214,7 @@ jobs:
         for file in k8s/*.yaml; do
           if [[ ! "$file" =~ "workflow" ]]; then
             echo "Applying $file"
-            kubectl apply -f $file
+            kubectl apply -f "$file"
           fi
         done
         
