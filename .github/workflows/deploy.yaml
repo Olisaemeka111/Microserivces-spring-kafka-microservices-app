@@ -67,42 +67,48 @@ jobs:
     # Build and push API Gateway
     - name: Build and Push API Gateway
       run: |
-        docker build -t $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/api-gateway:latest ./api-gateway
+        echo "Building API Gateway Docker image..."
+        docker build -t $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/api-gateway:latest -f ./api-gateway/Dockerfile --build-arg JAR_FILE=api-gateway/target/*.jar .
         docker push $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/api-gateway:latest
     
     # Build and push Discovery Server
     - name: Build and Push Discovery Server
       run: |
-        docker build -t $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/discovery-server:latest ./discovery-server
+        echo "Building Discovery Server Docker image..."
+        docker build -t $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/discovery-server:latest -f ./discovery-server/Dockerfile --build-arg JAR_FILE=discovery-server/target/*.jar .
         docker push $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/discovery-server:latest
     
     # Build and push Product Service
     - name: Build and Push Product Service
       run: |
-        docker build -t $REGISTRY/$REPOSITORY/product-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/product-service:latest ./product-service
+        echo "Building Product Service Docker image..."
+        docker build -t $REGISTRY/$REPOSITORY/product-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/product-service:latest -f ./product-service/Dockerfile --build-arg JAR_FILE=product-service/target/*.jar .
         docker push $REGISTRY/$REPOSITORY/product-service:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/product-service:latest
     
     # Build and push Order Service
     - name: Build and Push Order Service
       run: |
-        docker build -t $REGISTRY/$REPOSITORY/order-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/order-service:latest ./order-service
+        echo "Building Order Service Docker image..."
+        docker build -t $REGISTRY/$REPOSITORY/order-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/order-service:latest -f ./order-service/Dockerfile --build-arg JAR_FILE=order-service/target/*.jar .
         docker push $REGISTRY/$REPOSITORY/order-service:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/order-service:latest
     
     # Build and push Inventory Service
     - name: Build and Push Inventory Service
       run: |
-        docker build -t $REGISTRY/$REPOSITORY/inventory-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/inventory-service:latest ./inventory-service
+        echo "Building Inventory Service Docker image..."
+        docker build -t $REGISTRY/$REPOSITORY/inventory-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/inventory-service:latest -f ./inventory-service/Dockerfile --build-arg JAR_FILE=inventory-service/target/*.jar .
         docker push $REGISTRY/$REPOSITORY/inventory-service:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/inventory-service:latest
     
     # Build and push Notification Service
     - name: Build and Push Notification Service
       run: |
-        docker build -t $REGISTRY/$REPOSITORY/notification-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/notification-service:latest ./notification-service
+        echo "Building Notification Service Docker image..."
+        docker build -t $REGISTRY/$REPOSITORY/notification-service:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/notification-service:latest -f ./notification-service/Dockerfile --build-arg JAR_FILE=notification-service/target/*.jar .
         docker push $REGISTRY/$REPOSITORY/notification-service:$GITHUB_SHA
         docker push $REGISTRY/$REPOSITORY/notification-service:latest
     
@@ -112,28 +118,36 @@ jobs:
         echo "PROJECT_ID: ${{ env.PROJECT_ID }}"
         echo "GKE_CLUSTER: ${{ env.GKE_CLUSTER }}"
         echo "GKE_REGION: ${{ env.GKE_REGION }}"
+        echo "REGISTRY: ${{ env.REGISTRY }}"
+        echo "REPOSITORY: ${{ env.REPOSITORY }}"
+        echo "GITHUB_SHA: ${{ env.GITHUB_SHA }}"
     
     # Connect to GKE using direct gcloud command instead of the action
     - name: Connect to GKE Cluster
       run: |
-        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region=${{ env.GKE_REGION }} --project=${{ env.PROJECT_ID }}
+        echo "Connecting to GKE cluster $GKE_CLUSTER in region $GKE_REGION..."
+        gcloud container clusters get-credentials $GKE_CLUSTER --region=$GKE_REGION --project=$PROJECT_ID
     
     - name: Update Kubernetes manifests
       run: |
+        echo "Updating Kubernetes manifests with image tag: $GITHUB_SHA"
         sed -i "s|IMAGE_TAG|$GITHUB_SHA|g" k8s/*.yaml
     
     # Apply Kubernetes manifests excluding workflow files
     - name: Deploy to GKE
       run: |
+        echo "Applying Kubernetes manifests..."
         kubectl apply -f k8s/namespace.yaml
         
         # Apply manifests but exclude any workflow files
         for file in k8s/*.yaml; do
           if [[ ! "$file" =~ "workflow" ]]; then
+            echo "Applying $file"
             kubectl apply -f $file
           fi
         done
         
+        echo "Waiting for deployments to be ready..."
         kubectl rollout status deployment/api-gateway -n microservices-app
         kubectl rollout status deployment/discovery-server -n microservices-app
         kubectl rollout status deployment/product-service -n microservices-app
