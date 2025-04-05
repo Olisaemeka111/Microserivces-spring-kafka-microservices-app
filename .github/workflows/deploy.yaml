@@ -40,6 +40,7 @@ jobs:
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+        project_id: spring-kafka-microservices
     
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
@@ -70,8 +71,9 @@ jobs:
     - name: Get GKE Credentials
       uses: google-github-actions/get-gke-credentials@v1
       with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_REGION }}
+        cluster_name: spring-kafka-cluster
+        location: us-central1
+        project_id: spring-kafka-microservices
     
     - name: Update Kubernetes manifests
       run: |
