@@ -2,13 +2,14 @@ FROM eclipse-temurin:17.0.4.1_1-jre
 
 WORKDIR /app
 
+ARG JAR_FILE
+ARG CONFIG_DIR
+
 # Copy the JAR file
-COPY target/*.jar app.jar
+COPY ${JAR_FILE} app.jar
 
 # Copy configuration files
-COPY target/classes/application.properties /app/config/
-COPY target/classes/application-docker.properties /app/config/
-COPY target/classes/application-k8s.properties /app/config/
+COPY ${CONFIG_DIR}/ /app/config/
 
 EXPOSE 8080
 

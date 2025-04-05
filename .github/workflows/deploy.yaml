@@ -64,23 +64,27 @@ jobs:
     - name: Build with Maven
       run: |
         echo "Building with Maven..."
-        mvn -B package --file pom.xml -DskipTests
+        mvn -B clean resources:resources package --file pom.xml -DskipTests
         echo "Maven build completed. Listing JAR files:"
         find . -name "*.jar" | grep "/target/"
+        echo "Verifying application properties:"
+        find . -name "application*.properties" | grep "/target/classes/"
     
     # Build and push API Gateway
     - name: Build and Push API Gateway
       run: |
         echo "Building API Gateway Docker image..."
-        # First copy the JAR file to a simpler location
-        mkdir -p ./tmp
+        # First ensure configuration files are in place
+        mkdir -p ./tmp/config
         cp ./api-gateway/target/*.jar ./tmp/api-gateway.jar
+        cp ./api-gateway/target/classes/application*.properties ./tmp/config/
         
-        # Build using the copied JAR
+        # Build using the copied JAR and config files
         docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:${{ env.GITHUB_SHA }} \
                      -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:latest \
                      -f ./api-gateway/Dockerfile \
                      --build-arg JAR_FILE=./tmp/api-gateway.jar \
+                     --build-arg CONFIG_DIR=./tmp/config \
                      .
         
         # Push the images
@@ -224,4 +228,4 @@ jobs:
         kubectl rollout status deployment/product-service -n microservices-app
         kubectl rollout status deployment/order-service -n microservices-app
         kubectl rollout status deployment/inventory-service -n microservices-app
-        kubectl rollout status deployment/notification-service -n microservices-app 
+        kubectl rollout status deployment/notification-service -n microservices-app
