@@ -1,9 +1,11 @@
 # Spring Kafka Microservices App
 
-A robust microservices architecture using Spring Boot, Kafka, and deployed on GKE.
+A robust microservices architecture using Spring Boot, Kafka, and deployed on Google Kubernetes Engine (GKE).
 
 ## CI/CD Pipeline Status
-This project uses GitHub Actions for continuous integration and deployment to Google Kubernetes Engine.
+This project uses GitHub Actions for continuous integration and deployment to Google Kubernetes Engine (GKE).
+
+[![Build and Deploy to GKE](https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app/actions/workflows/gcp-deploy.yml/badge.svg)](https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app/actions/workflows/gcp-deploy.yml)
 
 ## Features
 - Microservices architecture with Spring Boot
@@ -76,7 +78,40 @@ If you intend to save the docker images after build, please enter your username 
 
 You may do so by uncommenting this code snippet in the main `pom.xml` file and enter your username (for the docker registry):
 
-`
+```xml
 <!-- Please change to your username -->
-                    <!--to><image>registry.hub.docker.com/<user-name>/${artifactId}</image></to-->
-`
+<!--to><image>registry.hub.docker.com/<user-name>/${artifactId}</image></to-->
+```
+
+## GKE Deployment
+
+This project is optimized for deployment on Google Kubernetes Engine (GKE) Autopilot mode. Recent optimizations include:
+
+### Resource Optimizations
+- Reduced CPU requests from 250m to 100m for all microservices
+- Reduced memory requests from 512Mi to 256Mi for all services
+- Reduced CPU limits from 500m to 200m
+- Reduced memory limits from 1Gi to 512Mi
+- For Elasticsearch, reduced Java heap size from 512m to 256m
+- For Kafka, added KAFKA_HEAP_OPTS to limit Java heap size
+
+### Deployment Architecture
+- Microservices: api-gateway, product-service, order-service, inventory-service, notification-service
+- Infrastructure: Kafka, Zookeeper, MongoDB, MySQL
+- Discovery: Spring Cloud Eureka Server for service discovery
+- Monitoring: Prometheus, Grafana
+- Logging: ELK Stack (Elasticsearch, Logstash, Kibana)
+
+### GitHub Actions Workflows
+- **gcp-deploy.yml**: Builds and deploys core microservices
+- **monitoring-logging.yml**: Deploys monitoring and logging components
+- **security-scan.yml**: Performs security scanning of code and dependencies
+
+### Accessing the Application
+Once deployed, the application can be accessed through the API Gateway service. Use the following command to get the external IP:
+
+```bash
+kubectl get service api-gateway -n microservices-app
+```
+
+Monitoring dashboards are available through Grafana, and logs can be viewed in Kibana.
