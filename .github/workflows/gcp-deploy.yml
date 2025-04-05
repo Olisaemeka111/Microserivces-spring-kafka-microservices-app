@@ -107,8 +107,13 @@ jobs:
 
     - name: Build and Push API Gateway
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }} ./api-gateway
+        # Use the layered Dockerfile for better performance
+        docker build -f ./api-gateway/Dockerfile.layered -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }} ./api-gateway
         docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }}
+        
+        # Also tag as latest for easier reference
+        docker tag ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:latest
+        docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:latest
 
     # Update the Kubernetes manifests with the new image tags
     - name: Update Kubernetes manifests
@@ -119,13 +124,52 @@ jobs:
         sed -i "s|image: .*notification-service.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.NOTIFICATION_SERVICE_IMAGE }}:${{ github.sha }}|g" k8s/services.yaml
         sed -i "s|image: .*api-gateway.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.API_GATEWAY_IMAGE }}:${{ github.sha }}|g" k8s/api-gateway.yaml
 
+    # Cleanup previous deployments
+    - name: Cleanup previous deployments
+      run: |
+        echo "Cleaning up previous deployments..."
+        # Delete API Gateway deployment and related resources
+        kubectl delete deployment api-gateway -n microservices-app --ignore-not-found=true
+        kubectl delete configmap api-gateway-config -n microservices-app --ignore-not-found=true
+        
+        # Wait for resources to be fully deleted
+        echo "Waiting for resources to be fully deleted..."
+        sleep 20
+        
+        # Check if discovery-server is running
+        DISCOVERY_SERVER_RUNNING=$(kubectl get pods -n microservices-app -l app=discovery-server -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
+        if [ "$DISCOVERY_SERVER_RUNNING" != "Running" ]; then
+          echo "WARNING: Discovery server is not running. Will deploy it first."
+          kubectl apply -f k8s/discovery-server.yaml
+          echo "Waiting for discovery-server to start..."
+          kubectl wait --for=condition=available --timeout=120s deployment/discovery-server -n microservices-app || true
+          sleep 30
+        fi
+
     # Deploy the application to GKE
     - name: Deploy to GKE
       run: |
+        # Apply namespace and infrastructure first
         kubectl apply -f k8s/namespace.yaml
         kubectl apply -f k8s/infrastructure.yaml
+        
+        # Wait for infrastructure to be ready
+        echo "Waiting for infrastructure to be ready..."
+        kubectl wait --for=condition=ready pod -l app=zookeeper -n microservices-app --timeout=120s || true
+        kubectl wait --for=condition=ready pod -l app=mongodb -n microservices-app --timeout=120s || true
+        sleep 20
+        
+        # Apply services
         kubectl apply -f k8s/services.yaml
+        
+        # Apply API Gateway with the updated configuration
+        echo "Deploying API Gateway..."
+        kubectl apply -f k8s/api-gateway-config.yaml
         kubectl apply -f k8s/api-gateway.yaml
+        
+        # Check deployment status
+        echo "Checking deployment status..."
+        kubectl get pods -n microservices-app
         kubectl get services -n microservices-app
         
     # Get the API Gateway external IP

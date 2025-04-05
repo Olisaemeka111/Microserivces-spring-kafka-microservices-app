@@ -6,7 +6,7 @@ metadata:
   labels:
     app: api-gateway
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api-gateway
@@ -19,9 +19,15 @@ spec:
         prometheus.io/path: "/actuator/prometheus"
         prometheus.io/port: "8080"
     spec:
+      # Add initContainer to wait for discovery-server to be ready
+      initContainers:
+      - name: wait-for-discovery-server
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nslookup discovery-server.microservices-app.svc.cluster.local; do echo waiting for discovery-server; sleep 2; done;']
       containers:
       - name: api-gateway
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/api-gateway:IMAGE_TAG
+        # Use a specific tag instead of IMAGE_TAG placeholder
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/api-gateway:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -30,23 +36,31 @@ spec:
           httpGet:
             path: /actuator/health/readiness
             port: 8080
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 6
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
             port: 8080
-          initialDelaySeconds: 90
+          initialDelaySeconds: 180
           periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
         - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
           value: "http://discovery-server:8761/eureka"
+        - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
+          value: "true"
+        - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER_CASE_SERVICE_ID
+          value: "true"
         # Using a ConfigMap for routes instead of environment variables
         volumeMounts:
         - name: gateway-config
-          mountPath: /config
+          mountPath: /application/config
         resources:
           requests:
             memory: "256Mi"
@@ -65,27 +79,66 @@ metadata:
   name: api-gateway-config
   namespace: microservices-app
 data:
-  application.yml: |
-    spring:
-      cloud:
-        gateway:
-          routes:
-            - id: product-service
-              uri: lb://product-service
-              predicates:
-                - Path=/api/products/**
-            - id: order-service
-              uri: lb://order-service
-              predicates:
-                - Path=/api/orders/**
-            - id: inventory-service
-              uri: lb://inventory-service
-              predicates:
-                - Path=/api/inventory/**
-            - id: notification-service
-              uri: lb://notification-service
-              predicates:
-                - Path=/api/notifications/**
+  application-k8s.properties: |
+    server.port=8080
+    spring.application.name=api-gateway
+    eureka.client.serviceUrl.defaultZone=http://discovery-server:8761/eureka
+    eureka.client.register-with-eureka=true
+    eureka.client.fetch-registry=true
+    eureka.instance.preferIpAddress=true
+    
+    # Increase Eureka timeouts for Kubernetes environment
+    eureka.client.registry-fetch-interval-seconds=5
+    eureka.instance.lease-renewal-interval-in-seconds=10
+    eureka.instance.lease-expiration-duration-in-seconds=20
+    
+    # Retry configuration for service discovery
+    spring.cloud.loadbalancer.retry.enabled=true
+    spring.cloud.loadbalancer.retry.max-retries-on-same-service-instance=3
+    spring.cloud.loadbalancer.retry.max-retries-on-next-service-instance=2
+    spring.cloud.loadbalancer.retry.retry-on-all-operations=true
+    
+    # Enable service discovery for gateway routes
+    spring.cloud.gateway.discovery.locator.enabled=true
+    spring.cloud.gateway.discovery.locator.lower-case-service-id=true
+    
+    # Logging configuration
+    logging.level.root=INFO
+    logging.level.org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator=INFO
+    logging.level.org.springframework.cloud.gateway=TRACE
+    logging.pattern.level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
+    
+    # Product service route
+    spring.cloud.gateway.routes[0].id=product-service
+    spring.cloud.gateway.routes[0].uri=lb://product-service
+    spring.cloud.gateway.routes[0].predicates[0]=Path=/api/product/**
+    
+    # Order service route
+    spring.cloud.gateway.routes[1].id=order-service
+    spring.cloud.gateway.routes[1].uri=lb://order-service
+    spring.cloud.gateway.routes[1].predicates[0]=Path=/api/order/**
+    
+    # Discovery service route
+    spring.cloud.gateway.routes[2].id=discovery-server
+    spring.cloud.gateway.routes[2].uri=http://discovery-server:8761
+    spring.cloud.gateway.routes[2].predicates[0]=Path=/eureka/web
+    spring.cloud.gateway.routes[2].filters[0]=SetPath=/
+    
+    # Discovery server static resources
+    spring.cloud.gateway.routes[3].id=discovery-server-static
+    spring.cloud.gateway.routes[3].uri=http://discovery-server:8761
+    spring.cloud.gateway.routes[3].predicates[0]=Path=/eureka/**
+    
+    # Actuator endpoints
+    management.endpoints.web.exposure.include=health,info,prometheus
+    management.endpoint.health.show-details=always
+    management.endpoint.health.probes.enabled=true
+    management.health.livenessstate.enabled=true
+    management.health.readinessstate.enabled=true
+    
+    # Tracing configuration
+    management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans
+    management.tracing.sampling.probability=1.0
 
 ---
 apiVersion: v1

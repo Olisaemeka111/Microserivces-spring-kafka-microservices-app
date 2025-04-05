@@ -1,13 +1,34 @@
 FROM eclipse-temurin:17.0.4.1_1-jre as builder
-WORKDIR extracted
+WORKDIR /extracted
 ADD target/*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract
 
 FROM eclipse-temurin:17.0.4.1_1-jre
-WORKDIR application
-COPY --from=builder extracted/dependencies/ ./
-COPY --from=builder extracted/spring-boot-loader/ ./
-COPY --from=builder extracted/snapshot-dependencies/ ./
-COPY --from=builder extracted/application/ ./
+WORKDIR /application
+
+# Copy layers from the builder stage
+COPY --from=builder /extracted/dependencies/ ./
+COPY --from=builder /extracted/spring-boot-loader/ ./
+COPY --from=builder /extracted/snapshot-dependencies/ ./
+COPY --from=builder /extracted/application/ ./
+
+# Create config directory
+RUN mkdir -p config
+
+# Copy configuration files
+COPY src/main/resources/application.properties ./config/
+COPY src/main/resources/application-docker.properties ./config/
+COPY src/main/resources/application-k8s.properties ./config/
+
+# Install curl for health check
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
+
+# Set environment variables
+ENV SPRING_CONFIG_LOCATION=file:/application/config/
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD curl -f http://localhost:8080/actuator/health/liveness || exit 1
+
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]

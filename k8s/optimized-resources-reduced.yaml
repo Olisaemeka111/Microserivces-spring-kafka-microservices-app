@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:42f2df3
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/api-gateway:IMAGE_TAG
         ports:
         - containerPort: 8080
         resources:
@@ -81,7 +81,7 @@ spec:
     spec:
       containers:
       - name: product-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/product-service:42f2df3
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/product-service:IMAGE_TAG
         ports:
         - containerPort: 8080
         resources:
@@ -120,7 +120,7 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/order-service:42f2df3
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/order-service:IMAGE_TAG
         ports:
         - containerPort: 8080
         resources:
@@ -165,7 +165,7 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/inventory-service:42f2df3
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/inventory-service:IMAGE_TAG
         ports:
         - containerPort: 8080
         resources:
@@ -210,7 +210,7 @@ spec:
     spec:
       containers:
       - name: notification-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/notification-service:42f2df3
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/notification-service:IMAGE_TAG
         ports:
         - containerPort: 8080
         resources:

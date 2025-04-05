@@ -2,10 +2,20 @@ FROM eclipse-temurin:17.0.4.1_1-jre
 
 WORKDIR /app
 
-# JAR_FILE can be an absolute path
-ARG JAR_FILE
-COPY ${JAR_FILE} app.jar
+# Copy the JAR file
+COPY target/*.jar app.jar
+
+# Copy configuration files
+COPY src/main/resources/application.properties /app/config/
+COPY src/main/resources/application-docker.properties /app/config/
+COPY src/main/resources/application-k8s.properties /app/config/
 
 EXPOSE 8080
+
+# Set environment variables
+ENV SPRING_CONFIG_LOCATION=file:/app/config/
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD curl -f http://localhost:8080/actuator/health/liveness || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
