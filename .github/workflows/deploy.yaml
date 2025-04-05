@@ -43,7 +43,7 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
-        project_id: ${{ env.PROJECT_ID }}
+        project_id: spring-kafka-microservices
     
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
