@@ -67,8 +67,9 @@ jobs:
     - name: Get GKE credentials
       uses: google-github-actions/get-gke-credentials@v1
       with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
+        cluster_name: "spring-kafka-cluster"
         location: ${{ env.GKE_ZONE }}
+        project_id: ${{ env.PROJECT_ID }}
 
     # Verify repository access
     - name: Verify Artifact Registry Repository
