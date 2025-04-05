@@ -1,5 +1,8 @@
 name: Build and Deploy to GKE
 
+# This workflow builds and deploys the spring-kafka-microservices app to GKE using Workload Identity Federation
+# Last updated: April 5, 2024
+
 on:
   push:
     branches: [ main ]
