@@ -1,0 +1,95 @@
+---
+# Current Deployment State
+terraform_version: 1.6.3
+project_id: spring-kafka-microservices
+region: us-central1
+deployment_date: "2025-04-05"
+
+# Resources already deployed
+deployed_resources:
+  - name: spring-kafka-cluster-vpc
+    type: google_compute_network
+    status: deployed
+    description: "VPC Network for GKE"
+    id: projects/spring-kafka-microservices/global/networks/spring-kafka-cluster-vpc
+
+  - name: spring-kafka-cluster-subnet
+    type: google_compute_subnetwork
+    parent: spring-kafka-cluster-vpc
+    status: deployed
+    id: projects/spring-kafka-microservices/regions/us-central1/subnetworks/spring-kafka-cluster-subnet
+    cidr: "10.0.0.0/18"
+    secondary_ranges:
+      - name: pods
+        cidr: "10.48.0.0/14"
+      - name: services  
+        cidr: "10.52.0.0/20"
+    
+  - name: spring-kafka-cluster-router
+    type: google_compute_router
+    parent: spring-kafka-cluster-vpc
+    status: deployed
+    id: projects/spring-kafka-microservices/regions/us-central1/routers/spring-kafka-cluster-router
+    
+  - name: spring-kafka-cluster-nat
+    type: google_compute_router_nat
+    parent: spring-kafka-cluster-router
+    status: deployed
+    id: spring-kafka-microservices/us-central1/spring-kafka-cluster-router/spring-kafka-cluster-nat
+    
+  - name: spring-kafka-cluster
+    type: google_container_cluster
+    parent: spring-kafka-cluster-subnet
+    status: deployed
+    id: projects/spring-kafka-microservices/locations/us-central1/clusters/spring-kafka-cluster
+    description: "GKE Autopilot Cluster"
+    autopilot: true
+    endpoint: 35.192.112.7
+    regions:
+      - us-central1-a
+      - us-central1-b
+      - us-central1-c
+
+# Kubernetes resources (will be applied after cluster_exists=true is set)
+kubernetes_resources:
+  - name: microservices-app
+    type: kubernetes_namespace
+    status: pending
+    depends_on: spring-kafka-cluster
+    
+  - name: microservices-quota
+    type: kubernetes_resource_quota
+    namespace: microservices-app
+    status: pending
+    depends_on: microservices-app
+    
+  - name: microservices-limits
+    type: kubernetes_limit_range
+    namespace: microservices-app
+    status: pending
+    depends_on: microservices-app
+    
+  - name: api-gateway-hpa
+    type: kubernetes_horizontal_pod_autoscaler
+    namespace: microservices-app
+    status: pending
+    depends_on: microservices-app
+    properties:
+      min_replicas: 2
+      max_replicas: 6
+      target_cpu_utilization: 70
+
+# Next steps
+next_steps:
+  - description: "Update provider.tf to set cluster_exists = true"
+    status: pending
+    
+  - description: "Run terraform plan to verify Kubernetes resources"
+    status: pending
+    
+  - description: "Run terraform apply to deploy Kubernetes resources"
+    status: pending
+    
+  - description: "Connect to cluster to verify deployment"
+    command: "gcloud container clusters get-credentials spring-kafka-cluster --region us-central1 --project spring-kafka-microservices"
+    status: pending 

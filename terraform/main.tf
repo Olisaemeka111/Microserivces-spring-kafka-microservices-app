@@ -2,6 +2,13 @@
 resource "google_compute_network" "vpc" {
   name                    = "${var.cluster_name}-vpc"
   auto_create_subnetworks = false
+  
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      auto_create_subnetworks,
+    ]
+  }
 }
 
 # Subnet for the GKE cluster
@@ -20,6 +27,13 @@ resource "google_compute_subnetwork" "subnet" {
   secondary_ip_range {
     range_name    = "services"
     ip_cidr_range = "10.52.0.0/20"
+  }
+  
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      secondary_ip_range,
+    ]
   }
 }
 
@@ -62,33 +76,6 @@ resource "google_container_cluster" "primary" {
     enabled = true
   }
   
-  # Add resource optimization settings with increased capacity
-  cluster_autoscaling {
-    auto_provisioning_defaults {
-      # Set higher resource limits for auto-provisioned node pools
-      min_cpu_platform = "Intel Skylake"
-      
-      # Set management settings for optimized operations
-      management {
-        auto_repair  = true
-        auto_upgrade = true
-      }
-    }
-    
-    # Set resource limits for the cluster
-    resource_limits {
-      resource_type = "cpu"
-      minimum       = 4
-      maximum       = 16
-    }
-    
-    resource_limits {
-      resource_type = "memory"
-      minimum       = 16
-      maximum       = 64
-    }
-  }
-  
   # Network security
   master_authorized_networks_config {
     cidr_blocks {
@@ -103,6 +90,15 @@ resource "google_container_cluster" "primary" {
     enable_private_endpoint = false
     master_ipv4_cidr_block  = "172.16.0.0/28"
   }
+  
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      node_locations,
+      ip_allocation_policy,
+      master_authorized_networks_config,
+    ]
+  }
 }
 
 # Create Cloud NAT for private GKE nodes to access the internet
@@ -110,6 +106,10 @@ resource "google_compute_router" "router" {
   name    = "${var.cluster_name}-router"
   region  = var.region
   network = google_compute_network.vpc.name
+  
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_compute_router_nat" "nat" {
@@ -118,4 +118,8 @@ resource "google_compute_router_nat" "nat" {
   region                             = var.region
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  
+  lifecycle {
+    prevent_destroy = true
+  }
 } 

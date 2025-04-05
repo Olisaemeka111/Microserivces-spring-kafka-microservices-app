@@ -1,0 +1,197 @@
+---
+# Terraform Plan in YAML format
+format_version: 1.0
+terraform_version: 1.6.3
+planned_values:
+  root_module:
+    resources:
+      - address: google_compute_network.vpc
+        mode: managed
+        type: google_compute_network
+        name: vpc
+        provider_name: registry.terraform.io/hashicorp/google
+        schema_version: 0
+        values:
+          auto_create_subnetworks: false
+          delete_default_routes_on_create: false
+          name: spring-kafka-cluster-vpc
+          network_firewall_policy_enforcement_order: AFTER_CLASSIC_FIREWALL
+          project: spring-kafka-microservices
+      
+      - address: google_compute_router.router
+        mode: managed
+        type: google_compute_router
+        name: router
+        provider_name: registry.terraform.io/hashicorp/google
+        schema_version: 0
+        values:
+          name: spring-kafka-cluster-router
+          network: spring-kafka-cluster-vpc
+          project: spring-kafka-microservices
+          region: us-central1
+      
+      - address: google_compute_router_nat.nat
+        mode: managed
+        type: google_compute_router_nat
+        name: nat
+        provider_name: registry.terraform.io/hashicorp/google
+        schema_version: 0
+        values:
+          icmp_idle_timeout_sec: 30
+          name: spring-kafka-cluster-nat
+          nat_ip_allocate_option: AUTO_ONLY
+          project: spring-kafka-microservices
+          region: us-central1
+          router: spring-kafka-cluster-router
+          source_subnetwork_ip_ranges_to_nat: ALL_SUBNETWORKS_ALL_IP_RANGES
+          tcp_established_idle_timeout_sec: 1200
+          tcp_time_wait_timeout_sec: 120
+          tcp_transitory_idle_timeout_sec: 30
+          udp_idle_timeout_sec: 30
+      
+      - address: google_compute_subnetwork.subnet
+        mode: managed
+        type: google_compute_subnetwork
+        name: subnet
+        provider_name: registry.terraform.io/hashicorp/google
+        schema_version: 0
+        values:
+          ip_cidr_range: 10.0.0.0/18
+          name: spring-kafka-cluster-subnet
+          network: spring-kafka-cluster-vpc
+          project: spring-kafka-microservices
+          region: us-central1
+          secondary_ip_range:
+            - ip_cidr_range: 10.48.0.0/14
+              range_name: pods
+            - ip_cidr_range: 10.52.0.0/20
+              range_name: services
+      
+      - address: google_container_cluster.primary
+        mode: managed
+        type: google_container_cluster
+        name: primary
+        provider_name: registry.terraform.io/hashicorp/google
+        schema_version: 1
+        values:
+          deletion_protection: true
+          disable_l4_lb_firewall_reconciliation: false
+          enable_autopilot: true
+          enable_cilium_clusterwide_network_policy: false
+          enable_fqdn_network_policy: false
+          enable_intranode_visibility: true
+          enable_kubernetes_alpha: false
+          enable_l4_ilb_subsetting: false
+          enable_legacy_abac: false
+          enable_multi_networking: false
+          enable_shielded_nodes: true
+          location: us-central1
+          name: spring-kafka-cluster
+          network: spring-kafka-cluster-vpc
+          networking_mode: VPC_NATIVE
+          node_locations:
+            - us-central1-a
+            - us-central1-b
+            - us-central1-c
+          subnetwork: spring-kafka-cluster-subnet
+          ip_allocation_policy:
+            cluster_secondary_range_name: pods
+            services_secondary_range_name: services
+            stack_type: IPV4
+          master_authorized_networks_config:
+            cidr_blocks:
+              - cidr_block: 0.0.0.0/0
+                display_name: All IPs
+          private_cluster_config:
+            enable_private_nodes: true
+            master_ipv4_cidr_block: 172.16.0.0/28
+          release_channel:
+            channel: STABLE
+          vertical_pod_autoscaling:
+            enabled: true
+          workload_identity_config:
+            workload_pool: spring-kafka-microservices.svc.id.goog
+      
+      - address: kubernetes_namespace.microservices_app
+        mode: managed
+        type: kubernetes_namespace
+        name: microservices_app
+        provider_name: registry.terraform.io/hashicorp/kubernetes
+        schema_version: 0
+        values:
+          metadata:
+            name: microservices-app
+          wait_for_default_service_account: false
+      
+      - address: kubernetes_limit_range.microservices_limits
+        mode: managed
+        type: kubernetes_limit_range
+        name: microservices_limits
+        provider_name: registry.terraform.io/hashicorp/kubernetes
+        schema_version: 0
+        values:
+          metadata:
+            name: microservices-limits
+            namespace: microservices-app
+          spec:
+            - limit:
+              - default:
+                  cpu: 200m
+                  memory: 512Mi
+                default_request:
+                  cpu: 100m
+                  memory: 256Mi
+                max:
+                  cpu: 1000m
+                  memory: 1024Mi
+                min:
+                  cpu: 10m
+                  memory: 64Mi
+                type: Container
+      
+      - address: kubernetes_resource_quota.microservices_quota
+        mode: managed
+        type: kubernetes_resource_quota
+        name: microservices_quota
+        provider_name: registry.terraform.io/hashicorp/kubernetes
+        schema_version: 0
+        values:
+          metadata:
+            name: microservices-quota
+            namespace: microservices-app
+      
+      - address: kubernetes_horizontal_pod_autoscaler.api_gateway_hpa
+        mode: managed
+        type: kubernetes_horizontal_pod_autoscaler
+        name: api_gateway_hpa
+        provider_name: registry.terraform.io/hashicorp/kubernetes
+        schema_version: 0
+        values:
+          metadata:
+            name: api-gateway-hpa
+            namespace: microservices-app
+          spec:
+            max_replicas: 6
+            min_replicas: 2
+            metric:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    average_utilization: 70
+                    type: Utilization
+            scale_target_ref:
+              api_version: apps/v1
+              kind: Deployment
+              name: api-gateway
+
+configuration:
+  provider_config:
+    google:
+      name: google
+      version_constraint: "~> 5.0"
+    kubernetes:
+      name: kubernetes
+      version_constraint: "~> 2.0"
+  
+  terraform_version: 1.6.3 

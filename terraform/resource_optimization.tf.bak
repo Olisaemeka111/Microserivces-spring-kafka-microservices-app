@@ -1,0 +1,106 @@
+# Resource optimization settings for GKE Autopilot
+
+# Create a namespace for the microservices application
+resource "kubernetes_namespace" "microservices_app" {
+  metadata {
+    name = "microservices-app"
+  }
+
+  depends_on = [
+    google_container_cluster.primary
+  ]
+}
+
+# Create ResourceQuota to limit namespace resource usage
+resource "kubernetes_resource_quota" "microservices_quota" {
+  metadata {
+    name      = "microservices-quota"
+    namespace = kubernetes_namespace.microservices_app.metadata[0].name
+  }
+
+  spec {
+    hard = {
+      "requests.cpu"    = "4"
+      "requests.memory" = "8Gi"
+      "limits.cpu"      = "8"
+      "limits.memory"   = "16Gi"
+      "pods"            = "40"
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.microservices_app
+  ]
+}
+
+# Create LimitRange to set default resource limits for containers
+resource "kubernetes_limit_range" "microservices_limits" {
+  metadata {
+    name      = "microservices-limits"
+    namespace = kubernetes_namespace.microservices_app.metadata[0].name
+  }
+
+  spec {
+    limit {
+      type = "Container"
+      
+      default = {
+        cpu    = "200m"
+        memory = "512Mi"
+      }
+      
+      default_request = {
+        cpu    = "100m"
+        memory = "256Mi"
+      }
+      
+      max = {
+        cpu    = "1000m"
+        memory = "1024Mi"
+      }
+      
+      min = {
+        cpu    = "10m"
+        memory = "64Mi"
+      }
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.microservices_app
+  ]
+}
+
+# Create HorizontalPodAutoscaler for the API Gateway
+resource "kubernetes_horizontal_pod_autoscaler" "api_gateway_hpa" {
+  metadata {
+    name      = "api-gateway-hpa"
+    namespace = kubernetes_namespace.microservices_app.metadata[0].name
+  }
+
+  spec {
+    scale_target_ref {
+      kind        = "Deployment"
+      name        = "api-gateway"
+      api_version = "apps/v1"
+    }
+    
+    min_replicas = 2
+    max_replicas = 6
+    
+    metric {
+      type = "Resource"
+      resource {
+        name = "cpu"
+        target {
+          type                = "Utilization"
+          average_utilization = 70
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.microservices_app
+  ]
+}

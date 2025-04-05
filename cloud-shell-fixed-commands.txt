@@ -1,0 +1,46 @@
+# Correct commands for Google Cloud Shell
+
+# Clone the repository properly
+git clone https://github.com/Olisaemeka111/Microserivces-spring-kafka-microservices-app.git
+
+# Navigate to the cloned directory
+cd Microserivces-spring-kafka-microservices-app
+
+# Navigate to the terraform directory
+cd terraform
+
+# Initialize Terraform
+terraform init
+
+# Verify your GCP project is set correctly
+gcloud config list project
+
+# If needed, set the correct project
+gcloud config set project spring-kafka-microservices
+
+# Plan the Terraform deployment
+terraform plan -out=tfplan
+
+# Apply the Terraform configuration
+terraform apply tfplan
+
+# After the cluster is created, get credentials
+gcloud container clusters get-credentials spring-kafka-cluster --region us-central1 --project spring-kafka-microservices
+
+# Create namespace for microservices
+kubectl create namespace microservices-app
+
+# Deploy the optimized infrastructure components
+kubectl apply -f ../k8s/optimized-infrastructure-reduced.yaml -n microservices-app
+
+# Deploy the discovery server first (important for service discovery)
+kubectl apply -f ../k8s/discovery-server.yaml -n microservices-app
+
+# Wait for discovery server to be ready
+kubectl wait --for=condition=available --timeout=300s deployment/discovery-server -n microservices-app
+
+# Deploy the remaining microservices
+kubectl apply -f ../k8s/optimized-resources-reduced.yaml -n microservices-app
+
+# Check the status of your pods
+kubectl get pods -n microservices-app

@@ -36,3 +36,47 @@ target/
 .vscode/
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# Terraform files
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+.terraform.lock.hcl
+tfplan
+tfplan.json
+
+# Large files
+*.hprof
+*.gz
+*.iso
+*.bin
+*.dump
+*.dmp
+*.tgz
+*.bz2
+*.7z
+*.pdf
+*.mp4
+*.mov
+*.wmv
+*.flv
+*.avi
+*.mkv
+
+# Test files
+push-test-*.txt
+github-push-test-*.txt
+
+# Temporary files
+*.swp
+*.swo
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db

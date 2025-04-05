@@ -1,0 +1,145 @@
+---
+# Infrastructure Architecture Diagram (YAML format)
+diagram:
+  title: "Spring Kafka Microservices Infrastructure"
+  version: "1.0"
+  
+components:
+  # Network Components
+  - type: VPC
+    name: spring-kafka-cluster-vpc
+    description: "Main VPC for the application"
+    id: vpc-1
+    
+  - type: Subnet
+    name: spring-kafka-cluster-subnet
+    description: "Primary subnet for the GKE cluster"
+    id: subnet-1
+    parent: vpc-1
+    properties:
+      cidr: "10.0.0.0/18"
+      secondary_ranges:
+        - name: "pods"
+          cidr: "10.48.0.0/14"
+        - name: "services"
+          cidr: "10.52.0.0/20"
+          
+  - type: Router
+    name: spring-kafka-cluster-router
+    description: "Router for outbound internet connectivity"
+    id: router-1
+    parent: vpc-1
+    
+  - type: NAT
+    name: spring-kafka-cluster-nat
+    description: "NAT gateway for private GKE nodes"
+    id: nat-1
+    parent: router-1
+    
+  # GKE Components
+  - type: GKE
+    name: spring-kafka-cluster
+    description: "GKE Autopilot Cluster"
+    id: gke-1
+    parent: vpc-1
+    properties:
+      region: "us-central1"
+      zones:
+        - "us-central1-a"
+        - "us-central1-b"
+        - "us-central1-c"
+      mode: "Autopilot"
+      network_type: "VPC Native"
+      release_channel: "STABLE"
+      private_nodes: true
+      workload_identity: true
+      
+  # Kubernetes Resources
+  - type: Namespace
+    name: microservices-app
+    description: "Namespace for microservices"
+    id: ns-1
+    parent: gke-1
+    
+  - type: ResourceQuota
+    name: microservices-quota
+    description: "Resource quota for namespace"
+    id: quota-1
+    parent: ns-1
+    
+  - type: LimitRange
+    name: microservices-limits
+    description: "Default resource limits"
+    id: limit-1
+    parent: ns-1
+    
+  - type: HPA
+    name: api-gateway-hpa
+    description: "Horizontal Pod Autoscaler for API Gateway"
+    id: hpa-1
+    parent: ns-1
+    properties:
+      min_replicas: 2
+      max_replicas: 6
+      target_cpu_utilization: 70%
+      
+  # Microservices (sample)
+  - type: Deployment
+    name: api-gateway
+    description: "API Gateway Service"
+    id: svc-1
+    parent: ns-1
+    properties:
+      image: "us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:42f2df3"
+      replicas: 2
+      
+  - type: Deployment
+    name: discovery-server
+    description: "Service Discovery (Eureka)"
+    id: svc-2
+    parent: ns-1
+    properties:
+      image: "us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/discovery-server:42f2df3"
+      replicas: 1
+      
+# Relationships
+relationships:
+  - from: vpc-1
+    to: subnet-1
+    type: contains
+    
+  - from: vpc-1
+    to: router-1
+    type: contains
+    
+  - from: router-1
+    to: nat-1
+    type: contains
+    
+  - from: subnet-1
+    to: gke-1
+    type: hosts
+    
+  - from: gke-1
+    to: ns-1
+    type: contains
+    
+  - from: ns-1
+    to: quota-1
+    type: contains
+    
+  - from: ns-1
+    to: limit-1
+    type: contains
+    
+  - from: ns-1
+    to: svc-1
+    type: contains
+    
+  - from: ns-1
+    to: svc-2
+    type: contains
+    
+  - from: hpa-1
+    to: svc-1
+    type: scales 

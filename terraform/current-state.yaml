@@ -1,0 +1,136 @@
+---
+# Current Terraform State
+terraform_version: 1.6.3
+project_id: spring-kafka-microservices
+region: us-central1
+creation_date: "2025-04-05"
+
+# Managed Resources
+resources:
+  # Network Resources
+  - type: google_compute_network
+    name: vpc
+    id: projects/spring-kafka-microservices/global/networks/spring-kafka-cluster-vpc
+    attributes:
+      name: spring-kafka-cluster-vpc
+      auto_create_subnetworks: false
+      routing_mode: REGIONAL
+      network_id: "7880968857569807791"
+      network_firewall_policy_enforcement_order: AFTER_CLASSIC_FIREWALL
+      
+  - type: google_compute_subnetwork
+    name: subnet
+    id: projects/spring-kafka-microservices/regions/us-central1/subnetworks/spring-kafka-cluster-subnet
+    attributes:
+      name: spring-kafka-cluster-subnet
+      network: spring-kafka-cluster-vpc
+      region: us-central1
+      ip_cidr_range: 10.0.0.0/18
+      gateway_address: 10.0.0.1
+      purpose: PRIVATE
+      secondary_ip_ranges:
+        - range_name: pods
+          ip_cidr_range: 10.48.0.0/14
+        - range_name: services
+          ip_cidr_range: 10.52.0.0/20
+          
+  - type: google_compute_router
+    name: router
+    id: projects/spring-kafka-microservices/regions/us-central1/routers/spring-kafka-cluster-router
+    attributes:
+      name: spring-kafka-cluster-router
+      network: spring-kafka-cluster-vpc
+      region: us-central1
+      
+  - type: google_compute_router_nat
+    name: nat
+    id: spring-kafka-microservices/us-central1/spring-kafka-cluster-router/spring-kafka-cluster-nat
+    attributes:
+      name: spring-kafka-cluster-nat
+      router: spring-kafka-cluster-router
+      region: us-central1
+      nat_ip_allocate_option: AUTO_ONLY
+      source_subnetwork_ip_ranges_to_nat: ALL_SUBNETWORKS_ALL_IP_RANGES
+      
+  # GKE Cluster
+  - type: google_container_cluster
+    name: primary
+    id: projects/spring-kafka-microservices/locations/us-central1/clusters/spring-kafka-cluster
+    attributes:
+      name: spring-kafka-cluster
+      location: us-central1
+      network: spring-kafka-cluster-vpc
+      subnetwork: spring-kafka-cluster-subnet
+      enable_autopilot: true
+      endpoint: 35.192.112.7
+      node_locations:
+        - us-central1-a
+        - us-central1-b
+        - us-central1-c
+      ip_allocation_policy:
+        cluster_secondary_range_name: pods
+        services_secondary_range_name: services
+        cluster_ipv4_cidr_block: 10.48.0.0/14
+        services_ipv4_cidr_block: 10.52.0.0/20
+      release_channel:
+        channel: STABLE
+      workload_identity_config:
+        workload_pool: spring-kafka-microservices.svc.id.goog
+      vertical_pod_autoscaling:
+        enabled: true
+      private_cluster_config:
+        enable_private_nodes: true
+        master_ipv4_cidr_block: 172.16.0.0/28
+        public_endpoint: 35.192.112.7
+      node_pools:
+        - name: default-pool
+          machine_type: e2-small
+        - name: pool-1 
+          machine_type: e2-medium
+        - name: pool-2
+          machine_type: e2-standard-2
+        - name: pool-3
+          machine_type: e2-standard-4
+        - name: pool-4
+          machine_type: e2-standard-8
+        - name: pool-5
+          machine_type: e2-standard-16
+        - name: pool-6
+          machine_type: e2-standard-32
+
+# Cluster Access
+cluster_access:
+  endpoint: 35.192.112.7
+  command: gcloud container clusters get-credentials spring-kafka-cluster --region us-central1 --project spring-kafka-microservices
+
+# Pending Resources (Not Yet Applied)
+pending_resources:
+  # Kubernetes Resources (waiting for cluster_exists=true)
+  - type: kubernetes_namespace
+    name: microservices_app
+    count: 0
+    attributes:
+      name: microservices-app
+      
+  - type: kubernetes_resource_quota
+    name: microservices_quota
+    count: 0
+    attributes:
+      name: microservices-quota
+      namespace: microservices-app
+      
+  - type: kubernetes_limit_range
+    name: microservices_limits
+    count: 0
+    attributes:
+      name: microservices-limits
+      namespace: microservices-app
+      
+  - type: kubernetes_horizontal_pod_autoscaler
+    name: api_gateway_hpa
+    count: 0
+    attributes:
+      name: api-gateway-hpa
+      namespace: microservices-app
+      min_replicas: 2
+      max_replicas: 6 

@@ -9,6 +9,7 @@ This Terraform configuration creates a GKE Autopilot cluster optimized for micro
 - VPC with custom subnets and secondary ranges for pods and services
 - Workload Identity enabled for enhanced security
 - Vertical Pod Autoscaling for optimized resource usage
+- GitHub Actions integration with Workload Identity Federation
 
 ## File Structure
 
@@ -20,6 +21,7 @@ The Terraform configuration is organized into the following files:
 - `provider.tf` - Contains provider configuration settings
 - `versions.tf` - Specifies Terraform and provider version requirements
 - `terraform.tfvars` - Contains the actual values for the variables
+- `github-actions-auth.tf` - Sets up authentication between GitHub Actions and GKE
 
 ## Prerequisites
 
@@ -29,10 +31,34 @@ The Terraform configuration is organized into the following files:
    - Compute Engine API
    - Kubernetes Engine API
    - Container Registry API
+   - IAM API
+   - IAM Credentials API
 
 ## Usage
 
-1. Update the `terraform.tfvars` file with your project ID and desired region.
+1. Update the `terraform.tfvars` file with your configuration values:
+
+   ```hcl
+   # Project settings
+   project_id = "your-gcp-project-id"
+   
+   # GitHub configuration - IMPORTANT for GitHub Actions integration
+   github_owner = "your-github-username-or-org"
+   github_repo = "your-repository-name"
+   
+   # GKE cluster configuration
+   region = "us-central1"
+   cluster_name = "spring-kafka-cluster"
+   
+   # Network configuration
+   vpc_name = "spring-kafka-cluster-vpc"
+   subnet_name = "spring-kafka-cluster-subnet"
+   subnet_cidr = "10.0.0.0/18"
+   
+   # Deployments configuration
+   deployments_available = false
+   cluster_exists = true
+   ```
 
 2. Initialize Terraform:
    ```bash
@@ -49,10 +75,33 @@ The Terraform configuration is organized into the following files:
    terraform apply
    ```
 
-5. Connect to your new cluster:
+5. Capture the GitHub Actions authentication outputs:
+   ```bash
+   terraform output service_account_email
+   terraform output workload_identity_provider
+   ```
+
+6. Add these outputs as secrets in your GitHub repository:
+   - `SERVICE_ACCOUNT_EMAIL`: The value from the service_account_email output
+   - `WORKLOAD_IDENTITY_PROVIDER`: The value from the workload_identity_provider output
+
+7. Connect to your new cluster:
    ```bash
    gcloud container clusters get-credentials spring-kafka-cluster --region us-central1 --project YOUR_PROJECT_ID
    ```
+
+## GitHub Actions Integration
+
+This configuration includes Workload Identity Federation for GitHub Actions, allowing your CI/CD pipeline to securely deploy to your GKE cluster without storing Google Cloud credentials.
+
+To complete the GitHub Actions setup:
+
+1. Make sure you've set your actual GitHub username in the `github_owner` variable in `terraform.tfvars`.
+2. Apply the Terraform configuration.
+3. Add the service account email and workload identity provider outputs as GitHub repository secrets.
+4. Ensure your GitHub repository is set to allow ID token requests in Repository Settings > Actions > General.
+
+See the detailed instructions in `../docs/GITHUB_GKE_SETUP.md` for more information.
 
 ## Deploying Microservices
 
