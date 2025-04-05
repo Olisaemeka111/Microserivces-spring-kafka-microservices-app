@@ -17,6 +17,9 @@ env:
   REGISTRY: us-central1-docker.pkg.dev
   REPOSITORY: spring-kafka-microservices/microservices
   GITHUB_SHA: ${{ github.sha }}
+  # For troubleshooting - print secret existence but not values
+  WORKLOAD_IDENTITY_PROVIDER_EXISTS: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER != '' }}
+  SERVICE_ACCOUNT_EMAIL_EXISTS: ${{ secrets.SERVICE_ACCOUNT_EMAIL != '' }}
 
 jobs:
   setup-build-publish-deploy:
@@ -31,6 +34,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       
+    - name: Print Debug Info
+      run: |
+        echo "Workload Identity Provider exists: ${{ env.WORKLOAD_IDENTITY_PROVIDER_EXISTS }}"
+        echo "Service Account Email exists: ${{ env.SERVICE_ACCOUNT_EMAIL_EXISTS }}"
+    
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -38,55 +46,40 @@ jobs:
         distribution: 'temurin'
         cache: maven
     
-    - name: Print GitHub SHA for debugging
-      run: |
-        echo "Using GitHub SHA: $GITHUB_SHA"
-    
     - name: Google Auth
       id: auth
       uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
-        project_id: ${{ env.PROJECT_ID }}
-        token_format: 'access_token'
-        create_credentials_file: true
+        project_id: spring-kafka-microservices
     
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
-        project_id: ${{ env.PROJECT_ID }}
+        project_id: spring-kafka-microservices
         install_components: 'gke-gcloud-auth-plugin'
     
-    - name: Setup Docker for Artifact Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: oauth2accesstoken
-        password: ${{ steps.auth.outputs.access_token }}
+    - name: Configure Docker
+      run: |
+        gcloud auth configure-docker $REGISTRY --quiet
     
     - name: Build with Maven
       run: mvn -B package --file pom.xml -DskipTests
     
-    # Build and push API Gateway
+    # Build and push API Gateway - using direct Docker commands
     - name: Build and Push API Gateway
-      uses: docker/build-push-action@v3
-      with:
-        context: ./api-gateway
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:${{ github.sha }}
-          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:latest
+      run: |
+        docker build -t $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/api-gateway:latest ./api-gateway
+        docker push $REGISTRY/$REPOSITORY/api-gateway:$GITHUB_SHA
+        docker push $REGISTRY/$REPOSITORY/api-gateway:latest
     
-    # Build and push Discovery Server
+    # Build and push Discovery Server - using direct Docker commands
     - name: Build and Push Discovery Server
-      uses: docker/build-push-action@v3
-      with:
-        context: ./discovery-server
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ github.sha }}
-          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest
+      run: |
+        docker build -t $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA -t $REGISTRY/$REPOSITORY/discovery-server:latest ./discovery-server
+        docker push $REGISTRY/$REPOSITORY/discovery-server:$GITHUB_SHA
+        docker push $REGISTRY/$REPOSITORY/discovery-server:latest
     
     # Add additional build steps for other microservices here
     
