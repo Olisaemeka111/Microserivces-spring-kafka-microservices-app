@@ -6,9 +6,9 @@ WORKDIR /app
 COPY target/*.jar app.jar
 
 # Copy configuration files
-COPY src/main/resources/application.properties /app/config/
-COPY src/main/resources/application-docker.properties /app/config/
-COPY src/main/resources/application-k8s.properties /app/config/
+COPY target/classes/application.properties /app/config/
+COPY target/classes/application-docker.properties /app/config/
+COPY target/classes/application-k8s.properties /app/config/
 
 EXPOSE 8080
 

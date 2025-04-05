@@ -47,6 +47,12 @@ jobs:
         service_account: '${{ secrets.SERVICE_ACCOUNT }}'
         token_format: 'access_token'
         create_credentials_file: true
+        export_environment_variables: true
+        cleanup_credentials: true
+        access_token_lifetime: 3600s
+        access_token_scopes: https://www.googleapis.com/auth/cloud-platform
+        retries: 3
+        backoff: 250
 
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
