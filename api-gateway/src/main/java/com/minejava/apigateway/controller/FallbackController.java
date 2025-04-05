@@ -1,5 +1,6 @@
 package com.minejava.apigateway.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,19 +13,19 @@ public class FallbackController {
 
     @GetMapping("/product")
     public Mono<ResponseEntity<String>> productServiceFallback() {
-        return Mono.just(ResponseEntity.serviceUnavailable()
+        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body("Product Service is currently unavailable. Please try again later."));
     }
 
     @GetMapping("/order")
     public Mono<ResponseEntity<String>> orderServiceFallback() {
-        return Mono.just(ResponseEntity.serviceUnavailable()
+        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body("Order Service is currently unavailable. Please try again later."));
     }
 
     @GetMapping("/default")
     public Mono<ResponseEntity<String>> defaultFallback() {
-        return Mono.just(ResponseEntity.serviceUnavailable()
+        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body("The requested service is currently unavailable. Please try again later."));
     }
 }

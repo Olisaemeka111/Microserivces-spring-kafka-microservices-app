@@ -18,11 +18,22 @@ public class CircuitBreakerConfig {
             CircuitBreakerRegistry circuitBreakerRegistry,
             TimeLimiterRegistry timeLimiterRegistry) {
         
-        return factory -> factory.configureDefault(id -> new Resilience4JConfigBuilder(id)
-                .circuitBreakerConfig(circuitBreakerRegistry.getDefaultConfig())
-                .timeLimiterConfig(timeLimiterRegistry.getDefaultConfig().toBuilder()
-                        .timeoutDuration(Duration.ofSeconds(5))
-                        .build())
-                .build());
+        return factory -> {
+            factory.configureDefault(id -> new Resilience4JConfigBuilder(id)
+                    .circuitBreakerConfig(circuitBreakerRegistry.getDefaultConfig())
+                    .timeLimiterConfig(timeLimiterRegistry.getDefaultConfig())
+                    .build());
+
+            factory.configure(builder -> builder
+                    .circuitBreakerConfig(io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+                            .slidingWindowSize(10)
+                            .minimumNumberOfCalls(5)
+                            .waitDurationInOpenState(Duration.ofSeconds(30))
+                            .build())
+                    .timeLimiterConfig(io.github.resilience4j.timelimiter.TimeLimiterConfig.custom()
+                            .timeoutDuration(Duration.ofSeconds(5))
+                            .build()),
+                    "productServiceCircuitBreaker", "orderServiceCircuitBreaker");
+        };
     }
 }
