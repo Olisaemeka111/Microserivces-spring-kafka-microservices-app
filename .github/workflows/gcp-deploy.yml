@@ -38,12 +38,15 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml -DskipTests
 
-    # Setup Google Cloud CLI
+    # Setup Google Cloud CLI with Workload Identity Federation
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v1'
       with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.SERVICE_ACCOUNT }}'
+        token_format: 'access_token'
+        create_credentials_file: true
 
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
@@ -67,9 +70,10 @@ jobs:
     - name: Get GKE credentials
       uses: google-github-actions/get-gke-credentials@v1
       with:
-        cluster_name: "spring-kafka-cluster"
+        cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
         project_id: ${{ env.PROJECT_ID }}
+        use_auth_provider: true
 
     # Verify repository access
     - name: Verify Artifact Registry Repository
