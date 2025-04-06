@@ -15,7 +15,7 @@ env:
   GKE_CLUSTER: spring-kafka-cluster
   GKE_REGION: us-central1
   REGISTRY: us-central1-docker.pkg.dev
-  REPOSITORY: spring-kafka-microservices/spring-kafka-microservices
+  REPOSITORY: spring-kafka-microservices/microservices
   GITHUB_SHA: ${{ github.sha }}
 
 jobs:
