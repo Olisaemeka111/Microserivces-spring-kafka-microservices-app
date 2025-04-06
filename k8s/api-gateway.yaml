@@ -26,8 +26,8 @@ spec:
         command: ['sh', '-c', 'until nslookup discovery-server.microservices-app.svc.cluster.local; do echo waiting for discovery-server; sleep 2; done;']
       containers:
       - name: api-gateway
-        # Use a specific tag instead of IMAGE_TAG placeholder
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/api-gateway:latest
+        # Use dynamic tag for consistency
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:IMAGE_TAG
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: product-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/product-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/product-service:IMAGE_TAG
         ports:
         - containerPort: 8080
         env:
@@ -64,7 +64,7 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/order-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/order-service:IMAGE_TAG
         ports:
         - containerPort: 8081
         env:
@@ -114,7 +114,7 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/inventory-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/inventory-service:IMAGE_TAG
         ports:
         - containerPort: 8082
         env:
@@ -162,7 +162,7 @@ spec:
     spec:
       containers:
       - name: notification-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/notification-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/notification-service:IMAGE_TAG
         ports:
         - containerPort: 8083
         env:
