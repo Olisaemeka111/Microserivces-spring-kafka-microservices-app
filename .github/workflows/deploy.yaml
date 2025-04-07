@@ -91,7 +91,7 @@ jobs:
     - name: Build and Push Discovery Server
       uses: docker/build-push-action@v4
       with:
-        context: ./discovery-server
+        context: discovery-server
         file: ./discovery-server/Dockerfile
         push: true
         tags: |
@@ -177,6 +177,11 @@ jobs:
             kubectl apply -f "$file"
           fi
         done
+        
+        echo "Debug: Checking pod status..."
+        kubectl get pods -n microservices-app
+        echo "Debug: Checking pod logs..."
+        kubectl logs -l app=api-gateway -n microservices-app --tail=100 || true
         
         echo "Waiting for deployments to be ready..."
         kubectl rollout status deployment/api-gateway -n microservices-app
