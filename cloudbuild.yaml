@@ -21,7 +21,13 @@ steps:
   args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/discovery-server:$COMMIT_SHA', './discovery-server']
 
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/api-gateway:$COMMIT_SHA', './api-gateway']
+  args: [
+    'build',
+    '-t', 'us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:latest',
+    '--build-arg', 'JAR_FILE=./tmp/api-gateway.jar',
+    '--build-arg', 'CONFIG_DIR=./tmp/config',
+    '.'
+  ]
 
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/admin-server:$COMMIT_SHA', './admin-server']
@@ -43,7 +49,7 @@ steps:
   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/discovery-server:$COMMIT_SHA']
 
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/api-gateway:$COMMIT_SHA']
+  args: ['push', 'us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:latest']
 
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/admin-server:$COMMIT_SHA']
@@ -100,7 +106,7 @@ images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/inventory-service:$COMMIT_SHA'
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/notification-service:$COMMIT_SHA'
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/discovery-server:$COMMIT_SHA'
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/api-gateway:$COMMIT_SHA'
+- 'us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:latest'
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices/admin-server:$COMMIT_SHA'
 
 timeout: 1800s 

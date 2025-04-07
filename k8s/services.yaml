@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: product-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/product-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/product-service:latest
         ports:
         - containerPort: 8080
         env:
@@ -28,11 +28,29 @@ spec:
           value: "mongodb://mongodb:27017/product-service"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          failureThreshold: 30
+          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -64,7 +82,7 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/order-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/order-service:latest
         ports:
         - containerPort: 8081
         env:
@@ -78,11 +96,29 @@ spec:
           value: "kafka:9092"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          failureThreshold: 30
+          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -114,7 +150,7 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/inventory-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/inventory-service:latest
         ports:
         - containerPort: 8082
         env:
@@ -126,11 +162,29 @@ spec:
           value: "jdbc:mysql://mysql-in:3306/inventory_service"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          failureThreshold: 30
+          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -162,7 +216,7 @@ spec:
     spec:
       containers:
       - name: notification-service
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/notification-service:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/notification-service:latest
         ports:
         - containerPort: 8083
         env:
@@ -174,11 +228,29 @@ spec:
           value: "kafka:9092"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          failureThreshold: 30
+          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service

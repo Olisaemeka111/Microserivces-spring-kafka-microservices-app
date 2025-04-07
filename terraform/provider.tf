@@ -1,4 +1,10 @@
+# Configure Google Cloud providers
 provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google-beta" {
   project = var.project_id
   region  = var.region
 }
@@ -6,26 +12,21 @@ provider "google" {
 # Get Google client configuration for authentication
 data "google_client_config" "default" {}
 
-provider "google-beta" {
-  project = var.project_id
-  region  = var.region
+# Get existing cluster data
+data "google_container_cluster" "my_cluster" {
+  name     = "spring-kafka-cluster"
+  location = var.region
+  project  = var.project_id
 }
 
-# Define a local variable to check if cluster exists
+# Define local variables
 locals {
-  cluster_exists = true # Set to true now that cluster is available
+  cluster_exists = true # Set to true since we're using an existing cluster
 }
 
-# Configure the Kubernetes Provider conditionally
+# Configure the Kubernetes Provider
 provider "kubernetes" {
-  host                   = local.cluster_exists ? "https://${google_container_cluster.primary.endpoint}" : ""
-  token                  = local.cluster_exists ? data.google_client_config.default.access_token : ""
-  cluster_ca_certificate = local.cluster_exists ? base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate) : ""
-  
-  # Skip validation during plan phase
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "echo"
-    args        = ["{}"]
-  }
+  host                   = "https://${data.google_container_cluster.my_cluster.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(data.google_container_cluster.my_cluster.master_auth[0].cluster_ca_certificate)
 } 

@@ -15,7 +15,7 @@ env:
   GKE_CLUSTER: spring-kafka-cluster
   GKE_REGION: us-central1
   REGISTRY: us-central1-docker.pkg.dev
-  REPOSITORY: ${{ env.PROJECT_ID }}/microservices
+  REPOSITORY: spring-kafka-microservices/microservices
   GITHUB_SHA: ${{ github.sha }}
 
 jobs:
@@ -78,119 +78,79 @@ jobs:
     
     # Build and push API Gateway
     - name: Build and Push API Gateway
-      run: |
-        echo "Building API Gateway Docker image..."
-        # First ensure configuration files are in place
-        mkdir -p ./tmp/config
-        cp ./api-gateway/target/*.jar ./tmp/api-gateway.jar
-        cp ./api-gateway/target/classes/application*.properties ./tmp/config/
-        
-        # Build using the copied JAR and config files
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:${{ env.GITHUB_SHA }} \
-                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:latest \
-                     -f ./api-gateway/Dockerfile \
-                     --build-arg JAR_FILE=./tmp/api-gateway.jar \
-                     --build-arg CONFIG_DIR=./tmp/config \
-                     .
-        
-        # Push the images
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:${{ env.GITHUB_SHA }}
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:latest
+      uses: docker/build-push-action@v4
+      with:
+        context: ./api-gateway
+        file: ./api-gateway/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/api-gateway:latest
     
     # Build and push Discovery Server
     - name: Build and Push Discovery Server
       run: |
         echo "Building Discovery Server Docker image..."
-        # First copy the JAR file to a simpler location
+        # First ensure the JAR file exists and copy it
         mkdir -p ./tmp
         cp ./discovery-server/target/*.jar ./tmp/discovery-server.jar
+        ls -la ./tmp/discovery-server.jar
         
         # Build using the copied JAR
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ env.GITHUB_SHA }} \
-                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest \
-                     -f ./discovery-server/Dockerfile \
-                     --build-arg JAR_FILE=./tmp/discovery-server.jar \
-                     .
+        docker build \
+          -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ github.sha }} \
+          -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest \
+          -f ./discovery-server/Dockerfile \
+          --build-arg JAR_FILE=./tmp/discovery-server.jar \
+          .
         
         # Push the images
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ env.GITHUB_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ github.sha }}
         docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest
     
     # Build and push Product Service
     - name: Build and Push Product Service
-      run: |
-        echo "Building Product Service Docker image..."
-        # First copy the JAR file to a simpler location
-        mkdir -p ./tmp
-        cp ./product-service/target/*.jar ./tmp/product-service.jar
-        
-        # Build using the copied JAR
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:${{ env.GITHUB_SHA }} \
-                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:latest \
-                     -f ./product-service/Dockerfile \
-                     --build-arg JAR_FILE=./tmp/product-service.jar \
-                     .
-        
-        # Push the images
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:${{ env.GITHUB_SHA }}
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:latest
+      uses: docker/build-push-action@v4
+      with:
+        context: ./product-service
+        file: ./product-service/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/product-service:latest
     
     # Build and push Order Service
     - name: Build and Push Order Service
-      run: |
-        echo "Building Order Service Docker image..."
-        # First copy the JAR file to a simpler location
-        mkdir -p ./tmp
-        cp ./order-service/target/*.jar ./tmp/order-service.jar
-        
-        # Build using the copied JAR
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:${{ env.GITHUB_SHA }} \
-                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:latest \
-                     -f ./order-service/Dockerfile \
-                     --build-arg JAR_FILE=./tmp/order-service.jar \
-                     .
-        
-        # Push the images
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:${{ env.GITHUB_SHA }}
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:latest
+      uses: docker/build-push-action@v4
+      with:
+        context: ./order-service
+        file: ./order-service/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/order-service:latest
     
     # Build and push Inventory Service
     - name: Build and Push Inventory Service
-      run: |
-        echo "Building Inventory Service Docker image..."
-        # First copy the JAR file to a simpler location
-        mkdir -p ./tmp
-        cp ./inventory-service/target/*.jar ./tmp/inventory-service.jar
-        
-        # Build using the copied JAR
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:${{ env.GITHUB_SHA }} \
-                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:latest \
-                     -f ./inventory-service/Dockerfile \
-                     --build-arg JAR_FILE=./tmp/inventory-service.jar \
-                     .
-        
-        # Push the images
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:${{ env.GITHUB_SHA }}
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:latest
+      uses: docker/build-push-action@v4
+      with:
+        context: ./inventory-service
+        file: ./inventory-service/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/inventory-service:latest
     
     # Build and push Notification Service
     - name: Build and Push Notification Service
-      run: |
-        echo "Building Notification Service Docker image..."
-        # First copy the JAR file to a simpler location
-        mkdir -p ./tmp
-        cp ./notification-service/target/*.jar ./tmp/notification-service.jar
-        
-        # Build using the copied JAR
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:${{ env.GITHUB_SHA }} \
-                     -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:latest \
-                     -f ./notification-service/Dockerfile \
-                     --build-arg JAR_FILE=./tmp/notification-service.jar \
-                     .
-        
-        # Push the images
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:${{ env.GITHUB_SHA }}
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:latest
+      uses: docker/build-push-action@v4
+      with:
+        context: ./notification-service
+        file: ./notification-service/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/notification-service:latest
     
     # Debug environment variables
     - name: Debug Environment Variables

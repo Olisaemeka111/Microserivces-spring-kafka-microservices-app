@@ -16,12 +16,13 @@ spec:
         app: api-gateway
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
         prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
     spec:
       containers:
       - name: api-gateway
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/spring-kafka-microservices/api-gateway:IMAGE_TAG
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/api-gateway:ece092b007469df25ff9fcab7bb8545898298f44
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         resources:

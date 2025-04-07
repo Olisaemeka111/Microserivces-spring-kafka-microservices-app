@@ -10,7 +10,7 @@ resource "kubernetes_namespace" "microservices_app" {
   }
   
   depends_on = [
-    google_container_cluster.primary
+    data.google_container_cluster.primary
   ]
 }
 
