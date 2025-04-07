@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17.0.4.1_1-jre as builder
 WORKDIR /app
-COPY target/discovery-server-1.0-SNAPSHOT.jar app.jar
+COPY ./target/*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract
 
 FROM eclipse-temurin:17.0.4.1_1-jre

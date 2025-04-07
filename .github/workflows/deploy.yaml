@@ -89,24 +89,14 @@ jobs:
     
     # Build and push Discovery Server
     - name: Build and Push Discovery Server
-      run: |
-        echo "Building Discovery Server Docker image..."
-        # First ensure the JAR file exists and copy it
-        mkdir -p ./tmp
-        cp ./discovery-server/target/*.jar ./tmp/discovery-server.jar
-        ls -la ./tmp/discovery-server.jar
-        
-        # Build using the copied JAR
-        docker build \
-          -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ github.sha }} \
-          -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest \
-          -f ./discovery-server/Dockerfile \
-          --build-arg JAR_FILE=./tmp/discovery-server.jar \
-          .
-        
-        # Push the images
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ github.sha }}
-        docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest
+      uses: docker/build-push-action@v4
+      with:
+        context: ./discovery-server
+        file: ./discovery-server/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/discovery-server:latest
     
     # Build and push Product Service
     - name: Build and Push Product Service
