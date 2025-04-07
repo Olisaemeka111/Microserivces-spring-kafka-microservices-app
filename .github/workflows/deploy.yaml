@@ -76,7 +76,10 @@ jobs:
           echo "Checking $module JAR..."
           ls -l $module/target/*.jar || echo "No JAR found for $module"
           if [ -f $module/target/*.jar ]; then
+            echo "Verifying manifest for $module..."
             jar tvf $module/target/*.jar | grep -i "main" || echo "No main manifest found in $module JAR"
+            echo "Listing manifest entries for $module..."
+            unzip -p $module/target/*.jar META-INF/MANIFEST.MF || echo "No manifest found in $module JAR"
           fi
         done
     
