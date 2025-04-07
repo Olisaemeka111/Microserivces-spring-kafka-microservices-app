@@ -19,4 +19,4 @@ ENV SPRING_CONFIG_LOCATION=file:/app/config/
 # Add health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD curl -f http://localhost:8082/actuator/health || exit 1
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
