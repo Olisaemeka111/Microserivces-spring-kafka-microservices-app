@@ -40,7 +40,7 @@ jobs:
     
     - name: Set Repository Path
       run: |
-        echo "REPOSITORY=${PROJECT_ID}/microservices" >> $GITHUB_ENV
+        echo "REPOSITORY=spring-kafka-microservices/microservices" >> $GITHUB_ENV
     
     - name: Google Auth
       id: auth
