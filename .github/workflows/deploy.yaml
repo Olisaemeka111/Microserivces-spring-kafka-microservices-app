@@ -91,8 +91,8 @@ jobs:
         file: ./api-gateway/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/api-gateway:${{ env.GITHUB_SHA }}
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/api-gateway:latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/api-gateway:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/api-gateway:latest
     
     # Build and push Discovery Server
     - name: Build and Push Discovery Server
@@ -102,8 +102,8 @@ jobs:
         file: ./discovery-server/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/discovery-server:${{ env.GITHUB_SHA }}
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/discovery-server:latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/discovery-server:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/discovery-server:latest
     
     # Build and push Product Service
     - name: Build and Push Product Service
@@ -113,8 +113,8 @@ jobs:
         file: ./product-service/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/product-service:${{ env.GITHUB_SHA }}
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/product-service:latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/product-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/product-service:latest
     
     # Build and push Order Service
     - name: Build and Push Order Service
@@ -124,8 +124,8 @@ jobs:
         file: ./order-service/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/order-service:${{ env.GITHUB_SHA }}
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/order-service:latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/order-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/order-service:latest
     
     # Build and push Inventory Service
     - name: Build and Push Inventory Service
@@ -135,8 +135,8 @@ jobs:
         file: ./inventory-service/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/inventory-service:${{ env.GITHUB_SHA }}
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/inventory-service:latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/inventory-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/inventory-service:latest
     
     # Build and push Notification Service
     - name: Build and Push Notification Service
@@ -146,8 +146,8 @@ jobs:
         file: ./notification-service/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/notification-service:${{ env.GITHUB_SHA }}
-          ${{ env.REGISTRY }}/spring-kafka-microservices/microservices/notification-service:latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/notification-service:${{ env.GITHUB_SHA }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/microservices/notification-service:latest
     
     # Debug environment variables
     - name: Debug Environment Variables

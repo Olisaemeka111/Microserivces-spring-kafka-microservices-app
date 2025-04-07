@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: discovery-server
-        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/discovery-server:latest
+        image: us-central1-docker.pkg.dev/spring-kafka-microservices/microservices/discovery-server:IMAGE_TAG
         ports:
         - containerPort: 8761
         env:
