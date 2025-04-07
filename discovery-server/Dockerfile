@@ -10,4 +10,4 @@ COPY --from=builder /app/spring-boot-loader/ ./
 COPY --from=builder /app/snapshot-dependencies/ ./
 COPY --from=builder /app/application/ ./
 EXPOSE 8761
-ENTRYPOINT ["java", "-cp", ".", "org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
