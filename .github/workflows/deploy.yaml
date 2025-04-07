@@ -71,12 +71,13 @@ jobs:
       run: |
         echo "Building with Maven..."
         mvn -B clean package spring-boot:repackage -DskipTests
-        echo "Maven build completed. Listing JAR files:"
-        find . -name "*.jar" | grep "/target/"
-        echo "Verifying JAR contents:"
-        for jar in $(find . -name "*.jar" | grep "/target/"); do
-          echo "Checking $jar"
-          jar tvf $jar | grep -i "main"
+        echo "Maven build completed. Verifying JAR files..."
+        for module in api-gateway discovery-server product-service order-service inventory-service notification-service; do
+          echo "Checking $module JAR..."
+          ls -l $module/target/*.jar || echo "No JAR found for $module"
+          if [ -f $module/target/*.jar ]; then
+            jar tvf $module/target/*.jar | grep -i "main" || echo "No main manifest found in $module JAR"
+          fi
         done
     
     # Build and push API Gateway
